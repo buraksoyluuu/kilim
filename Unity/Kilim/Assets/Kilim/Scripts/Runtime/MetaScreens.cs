@@ -19,11 +19,15 @@ namespace Kilim.Game
             ClaimRaceIfEnded();
 
             var v = Ui.VStack(root, 24, 32).Stretch();
+            Ui.Band(v);
 
             // Üst: coin, ilmek, ayarlar
             var top = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 100);
             Ui.CoinPill(top, app);
-            Ui.Label(top, $"✦ {m.Wallet.Ilmek} ilmek", 40, Theme.Ink, TextAnchor.MiddleCenter, true);
+            var il = Ui.HStack(top, 8, 0, TextAnchor.MiddleCenter, 100);
+            il.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
+            Ui.Icon(il, Art.Ilmek, 70);
+            Ui.Label(il, $"{m.Wallet.Ilmek}", 44, Theme.Ink, TextAnchor.MiddleLeft, true);
             Ui.Button(top, "Ayarlar", () => app.Nav.Show(new SettingsScreen()), Theme.Neutral, Theme.Ink, 100, 36);
 
             // Sol/sağ kısayollar
@@ -48,7 +52,11 @@ namespace Kilim.Game
 
             Ui.Spacer(v);
             var next = Home.NextTask(p);
-            Ui.Label(v, next != null ? $"Nine: \"{next.NineNote}\"" : "Nine: \"Ev pırıl pırıl oldu, ellerine sağlık.\"", 38, Theme.Muted, TextAnchor.MiddleCenter, false, 110);
+            var nine = Ui.HStack(v, 20, 0, TextAnchor.MiddleLeft, 170);
+            nine.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
+            Ui.Icon(nine, Art.Nine, 160);
+            var note = Ui.Label(nine, next != null ? $"Nine: \"{next.NineNote}\"" : "Nine: \"Ev pırıl pırıl oldu, ellerine sağlık.\"", 38, Theme.Ink, TextAnchor.MiddleLeft, false, 160);
+            Ui.Size(note.gameObject, -1, 160, 1);
 
             // Ana buton
             int lvl = p.CurrentLevel;
@@ -93,8 +101,8 @@ namespace Kilim.Game
         public override void Tick()
         {
             var m = App.Meta;
-            if (_starterTimer != null) _starterTimer.text = $"Kalan {Fmt.Span(m.Starter.Remaining(App.Profile))}";
-            if (_raceTimer != null) _raceTimer.text = m.Race.IsActive ? $"Yarış\n{Fmt.Span(m.Race.Remaining)}" : "Yarış\nCuma";
+            if (_starterTimer != null) _starterTimer.text = Loc.T($"Kalan {Fmt.Span(m.Starter.Remaining(App.Profile))}");
+            if (_raceTimer != null) _raceTimer.text = Loc.T(m.Race.IsActive ? $"Yarış\n{Fmt.Span(m.Race.Remaining)}" : "Yarış\nCuma");
         }
     }
 
@@ -220,7 +228,7 @@ namespace Kilim.Game
             var body = Ui.VStack(v, 20, 32);
             Ui.Label(body, "Herkese aynı desen. Süre yok, kaybetmek yok: tezgâh dolarsa son parça kendiliğinden geri alınır.", 34, Theme.Muted, TextAnchor.MiddleCenter, false, 110);
             var today = app.Clock.LocalDate();
-            Ui.Label(body, $"{today:MMMM yyyy} · Seri: {d.CurrentStreak(p)} gün", 40, Theme.Ink, TextAnchor.MiddleCenter, true);
+            Ui.Label(body, $"{today.ToString("MMMM yyyy", Loc.Culture)} · Seri: {d.CurrentStreak(p)} gün", 40, Theme.Ink, TextAnchor.MiddleCenter, true);
 
             var first = new DateTime(today.Year, today.Month, 1);
             int days = DateTime.DaysInMonth(today.Year, today.Month);
@@ -311,7 +319,7 @@ namespace Kilim.Game
 
         public override void Tick()
         {
-            if (_timer != null) _timer.text = App.Meta.Race.IsActive ? $"Kalan {Fmt.Span(App.Meta.Race.Remaining)}" : "";
+            if (_timer != null) _timer.text = App.Meta.Race.IsActive ? Loc.T($"Kalan {Fmt.Span(App.Meta.Race.Remaining)}") : "";
         }
 
         public override bool OnBack() { App.GoHome(); return true; }
@@ -397,12 +405,19 @@ namespace Kilim.Game
             var v = Ui.VStack(root, 0, 0).Stretch();
             Ui.Header(v, "Ayarlar", app.GoHome);
             var list = Ui.Scroll(v, 14, 32);
-            ConsentScreen.Toggle(list, "Müzik", p.Music, on => { p.Music = on; app.Save(); });
+            ConsentScreen.Toggle(list, "Müzik", p.Music, on => { p.Music = on; Audio.SetMusic(on); app.Save(); });
             ConsentScreen.Toggle(list, "Efektler", p.Sfx, on => { p.Sfx = on; app.ApplySettings(); app.Save(); });
             ConsentScreen.Toggle(list, "Titreşim", p.Haptics, on => { p.Haptics = on; app.ApplySettings(); app.Save(); });
             ConsentScreen.Toggle(list, "Sol el modu", p.LeftHanded, on => { p.LeftHanded = on; app.Save(); });
             ConsentScreen.Toggle(list, "Günlük desen bildirimi", p.DailyNotification, on => { p.DailyNotification = on; app.Save(); });
-            Ui.Button(list, "Dil: Türkçe", () => app.Nav.Toast("Diğer diller yakında."), Theme.Neutral, Theme.Ink, 110, 40);
+            Ui.Button(list, Loc.Lang == "tr" ? "Dil: Türkçe" : "Dil: English", () =>
+            {
+                int i = System.Array.IndexOf(Loc.Supported, Loc.Lang);
+                p.Language = Loc.Supported[(i + 1) % Loc.Supported.Length];
+                Loc.Set(p.Language);
+                app.Save();
+                app.Nav.Show(new SettingsScreen());
+            }, Theme.Neutral, Theme.Ink, 110, 40);
             Ui.Button(list, "Bulut kayıt (Game Center / Play Games)", () => app.Nav.Toast("Bulut kayıt bu sürümde test modunda."), Theme.Neutral, Theme.Ink, 110, 36);
             Ui.Button(list, "Satın alımları geri yükle", app.RestorePurchases, Theme.Neutral, Theme.Ink, 110, 40);
             Ui.Button(list, "Destek", () => Application.OpenURL("mailto:destek@example.com?subject=Kilim%20" + p.PlayerId.Substring(0, 8)), Theme.Neutral, Theme.Ink, 110, 40);

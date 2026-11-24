@@ -40,6 +40,7 @@ namespace Kilim.Game
         {
             I = this;
             Application.targetFrameRate = 60;
+            Audio.Init(gameObject);
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             BuildCanvas();
 
@@ -79,7 +80,8 @@ namespace Kilim.Game
             var profile = json != null ? PlayerProfile.FromJson(json) : null;
             if (json != null && profile == null) Debug.LogError("[Kilim] Kayıt bozuk; yeni profil başlatıldı");
             if (profile != null) profile.FirstSessionDone = true; // ikinci açılıştan itibaren (ilk oturumda tam ekran reklam yok)
-            Meta = new Meta(profile ?? new PlayerProfile(), Config, Clock);
+            if (profile == null) profile = new PlayerProfile { Language = Loc.SystemDefault() };
+            Meta = new Meta(profile, Config, Clock);
             ApplySettings();
         }
 
@@ -89,6 +91,8 @@ namespace Kilim.Game
         {
             Audio.Sfx = Profile.Sfx;
             Audio.Haptics = Profile.Haptics;
+            Audio.SetMusic(Profile.Music);
+            Loc.Set(Profile.Language);
         }
 
         private void OnApplicationPause(bool paused) { if (paused && Meta != null) Save(); }
@@ -115,7 +119,11 @@ namespace Kilim.Game
                 es.transform.SetParent(transform, false);
             }
 
-            var bg = Ui.Panel(canvasGo.transform, "Background", Theme.Bg);
+            var bg = Ui.Panel(canvasGo.transform, "Background", Color.white);
+            var bgImg = bg.GetComponent<Image>();
+            bgImg.sprite = Art.Pattern;
+            bgImg.type = Image.Type.Tiled;
+            if (bgImg.sprite == null) bgImg.color = Theme.Bg;
             var safe = Ui.Rect(canvasGo.transform, "SafeArea").Stretch();
             safe.gameObject.AddComponent<SafeArea>();
             Nav = new Navigator(this, safe, (RectTransform)canvasGo.transform);
@@ -256,6 +264,7 @@ namespace Kilim.Game
             if (Meta.ApplyPurchase(sku, tx, cents) == PurchaseOutcome.Granted)
             {
                 Save();
+                Audio.Play("coin");
                 Nav.Toast("Satın alma tamamlandı.");
                 if (Meta.TeenSpendNoticeDue)
                     Nav.Confirm("Bilgilendirme", "Bu ay 100 $ üzerinde harcama yaptın. Harcamalarını bir yetişkinle konuşmanı öneririz.", "Tamam", null, null, null);
@@ -284,7 +293,7 @@ namespace Kilim.Game
         {
             Debug.Log($"[Kilim] Sunucu silme isteği gönderildi: {Profile.PlayerId}"); // gerçek: backend DELETE /players/{id}
             Store.Delete();
-            Meta = new Meta(new PlayerProfile(), Config, Clock);
+            Meta = new Meta(new PlayerProfile { Language = Loc.SystemDefault() }, Config, Clock);
             ApplySettings();
             Nav.Show(new SplashScreen());
         }

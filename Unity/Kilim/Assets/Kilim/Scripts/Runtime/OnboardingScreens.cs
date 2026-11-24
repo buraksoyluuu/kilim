@@ -132,7 +132,7 @@ namespace Kilim.Game
             }, Theme.Neutral, Theme.Ink, 110, 40);
             void Paint()
             {
-                Ui.ButtonLabel(b).text = $"{label}:  {(state ? "AÇIK" : "KAPALI")}";
+                Ui.ButtonLabel(b).text = $"{Loc.T(label)}:  {Loc.T(state ? "AÇIK" : "KAPALI")}";
                 b.targetGraphic.color = state ? Theme.WithAlpha(Theme.Ok, 0.35f) : Theme.Neutral;
             }
             Paint();

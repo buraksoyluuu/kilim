@@ -23,9 +23,17 @@ namespace Kilim.Game
             stars.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             for (int i = 0; i < 3; i++)
             {
-                var s = Ui.Label(stars, "★", 140, Theme.Neutral, TextAnchor.MiddleCenter, true, 160);
-                Ui.Size(s.gameObject, 160, 160);
-                if (i < _r.Stars) { int idx = i; App.Delay(0.3f * (idx + 1), () => { if (s != null) s.color = Theme.Gold; }); }
+                var s = Ui.Icon(stars, Art.Star, 160, Theme.Neutral);
+                if (i < _r.Stars)
+                {
+                    int idx = i;
+                    App.Delay(0.3f * (idx + 1), () =>
+                    {
+                        if (s == null) return;
+                        s.color = Theme.Gold;
+                        Audio.Play($"star{idx + 1}");
+                    });
+                }
             }
             Ui.Label(v, $"Desen %{Mathf.RoundToInt((float)_r.PatternPercent * 100)}", 48, Theme.Ink, TextAnchor.MiddleCenter, true);
 
@@ -54,7 +62,8 @@ namespace Kilim.Game
                         if (App.Meta.DoubleWinCoins(_run))
                         {
                             App.Save();
-                            _coins.text = $"+{_r.Coins * 2} coin";
+                            _coins.text = Loc.T($"+{_r.Coins * 2} coin");
+                            Audio.Play("coin");
                             _double.gameObject.SetActive(false);
                         }
                     }), Theme.Gold, Theme.Ink);

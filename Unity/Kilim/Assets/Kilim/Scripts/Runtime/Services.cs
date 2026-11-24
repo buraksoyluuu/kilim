@@ -213,25 +213,6 @@ namespace Kilim.Game
     }
 
     // =====================================================================
-    // Ses / titreşim
-    // =====================================================================
-
-    public static class Audio
-    {
-        public static bool Sfx = true;
-        public static bool Haptics = true;
-
-        public static void Click() { }
-
-        public static void Place()
-        {
-#if UNITY_ANDROID || UNITY_IOS
-            if (Haptics) Handheld.Vibrate();
-#endif
-        }
-    }
-
-    // =====================================================================
     // Bölümler
     // =====================================================================
 

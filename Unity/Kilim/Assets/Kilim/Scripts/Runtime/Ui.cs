@@ -86,11 +86,43 @@ namespace Kilim.Game
             return rt;
         }
 
+        /// <summary>Yuvarlatılmış kilim karosu (9-dilim). mult büyüdükçe köşe küçülür.</summary>
+        public static Image Round(Image img, float mult = 1.5f, Sprite sprite = null)
+        {
+            img.sprite = sprite ?? Art.Tile;
+            img.type = Image.Type.Sliced;
+            img.pixelsPerUnitMultiplier = mult;
+            return img;
+        }
+
+        /// <summary>Kilim kenar bandı (ekran üstü süsü).</summary>
+        public static void Band(Transform parent, float h = 44)
+        {
+            var img = Box(parent, "Band", Color.white, -1, h);
+            img.sprite = Art.Band;
+            img.type = Image.Type.Tiled;
+            img.pixelsPerUnitMultiplier = 64f / h;
+            img.raycastTarget = false;
+        }
+
+        public static Image Icon(Transform parent, Sprite s, float size, Color? tint = null)
+        {
+            var rt = Rect(parent, "Icon");
+            var img = rt.gameObject.AddComponent<Image>();
+            img.sprite = s;
+            img.color = tint ?? Color.white;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            Size(rt.gameObject, size, size, 0);
+            return img;
+        }
+
         public static Image Box(Transform parent, string name, Color color, float w = -1, float h = -1)
         {
             var rt = Rect(parent, name);
             var img = rt.gameObject.AddComponent<Image>();
             img.color = color;
+            Round(img);
             if (w >= 0 || h >= 0) Size(rt.gameObject, w, h);
             return img;
         }
@@ -101,7 +133,7 @@ namespace Kilim.Game
             var rt = Rect(parent, "Text");
             var t = rt.gameObject.AddComponent<Text>();
             t.font = Font;
-            t.text = text;
+            t.text = Loc.T(text);
             t.fontSize = size;
             t.color = color ?? Theme.Ink;
             t.alignment = align;
@@ -211,6 +243,7 @@ namespace Kilim.Game
         /// <summary>Üst başlık çubuğu: geri butonu + başlık + sağda coin.</summary>
         public static RectTransform Header(Transform parent, string title, Action onBack, App app = null)
         {
+            Band(parent);
             var bar = HStack(parent, 16, 24, TextAnchor.MiddleLeft, 150, "Header");
             var g = bar.GetComponent<HorizontalLayoutGroup>();
             g.childForceExpandWidth = false;
@@ -223,10 +256,17 @@ namespace Kilim.Game
 
         public static Text CoinPill(Transform parent, App app)
         {
-            var pill = Box(parent, "Coins", Theme.Neutral, 260, 90);
+            var pill = Box(parent, "Coins", Theme.Neutral, 270, 90);
+            Round(pill, 1f, Art.Pill);
+            var icon = Icon(pill.transform, Art.Coin, 64);
+            var irt = (RectTransform)icon.transform;
+            irt.anchorMin = irt.anchorMax = new Vector2(0, 0.5f);
+            irt.pivot = new Vector2(0, 0.5f);
+            irt.sizeDelta = new Vector2(64, 64);
+            irt.anchoredPosition = new Vector2(14, 0);
             var t = Label(pill.transform, "", 40, Theme.Ink, TextAnchor.MiddleCenter, true);
-            ((RectTransform)t.transform).Stretch();
-            void Refresh() { if (t != null) t.text = $"● {Fmt.N(app.Meta.Wallet.Coins)}"; }
+            ((RectTransform)t.transform).Stretch(70, 0, 10, 0);
+            void Refresh() { if (t != null) t.text = Fmt.N(app.Meta.Wallet.Coins); }
             Refresh();
             app.Meta.Wallet.Changed += Refresh;
             pill.gameObject.AddComponent<OnDestroyHook>().Action = () => app.Meta.Wallet.Changed -= Refresh;
@@ -266,12 +306,12 @@ namespace Kilim.Game
 
     public static class Fmt
     {
-        private static readonly System.Globalization.CultureInfo Tr = new System.Globalization.CultureInfo("tr-TR");
-        public static string N(int n) => n.ToString("N0", Tr);
+        public static string N(int n) => n.ToString("N0", Loc.Culture);
 
         public static string Span(TimeSpan t)
         {
-            if (t.TotalDays >= 1) return $"{(int)t.TotalDays}g {t.Hours}s";
+            bool tr = Loc.Lang == "tr";
+            if (t.TotalDays >= 1) return tr ? $"{(int)t.TotalDays}g {t.Hours}s" : $"{(int)t.TotalDays}d {t.Hours}h";
             if (t.TotalHours >= 1) return $"{(int)t.TotalHours:00}:{t.Minutes:00}:{t.Seconds:00}";
             return $"{t.Minutes:00}:{t.Seconds:00}";
         }

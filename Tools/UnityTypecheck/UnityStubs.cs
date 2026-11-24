@@ -62,6 +62,7 @@ namespace UnityEngine
     }
     public struct Rect
     {
+        public Rect(float x, float y, float w, float h) { xMin = x; yMin = y; xMax = x + w; yMax = y + h; }
         public float xMin, yMin, xMax, yMax;
         public Vector2 size => default;
         public static bool operator ==(Rect a, Rect b) => true;
@@ -87,7 +88,7 @@ namespace UnityEngine
     {
         public float r, g, b, a;
         public Color(float r, float g, float b, float a = 1) { this.r = r; this.g = g; this.b = b; this.a = a; }
-        public static Color white => default; public static Color black => default;
+        public static Color white => default; public static Color black => default; public static Color clear => default;
         public static Color Lerp(Color a, Color b, float t) => default;
     }
     public static class ColorUtility { public static bool TryParseHtmlString(string s, out Color c) { c = default; return true; } }
@@ -101,8 +102,24 @@ namespace UnityEngine
     {
         public static void Log(object o) { } public static void LogWarning(object o) { } public static void LogError(object o) { }
     }
+    public enum SystemLanguage { Turkish, English, Unknown }
+    public struct Vector4 { public Vector4(float x, float y, float z, float w) { } }
+    public class Texture : Object { public int width => 0; public int height => 0; }
+    public sealed class Texture2D : Texture { }
+    public enum SpriteMeshType { FullRect, Tight }
+    public sealed class Sprite : Object
+    {
+        public static Sprite Create(Texture2D t, Rect r, Vector2 pivot, float ppu, uint extrude, SpriteMeshType m, Vector4 border) => null;
+    }
+    public sealed class AudioClip : Object { }
+    public sealed class AudioSource : Behaviour
+    {
+        public bool playOnAwake, loop; public float volume; public AudioClip clip; public bool isPlaying => false;
+        public void Play() { } public void Stop() { } public void PlayOneShot(AudioClip c, float v) { }
+    }
     public static class Application
     {
+        public static SystemLanguage systemLanguage => SystemLanguage.Turkish; public static bool isEditor => true;
         public static string persistentDataPath => ""; public static string version => "";
         public static int targetFrameRate; public static void OpenURL(string u) { }
     }
@@ -161,7 +178,11 @@ namespace UnityEngine.UI
     using UnityEngine.EventSystems;
     public abstract class Graphic : UIBehaviour { public Color color; public bool raycastTarget; }
     public abstract class MaskableGraphic : Graphic { }
-    public sealed class Image : MaskableGraphic { }
+    public sealed class Image : MaskableGraphic
+    {
+        public enum Type { Simple, Sliced, Tiled, Filled }
+        public Sprite sprite; public Type type; public float pixelsPerUnitMultiplier; public bool preserveAspect;
+    }
     public sealed class Text : MaskableGraphic
     {
         public string text; public Font font; public int fontSize; public TextAnchor alignment; public FontStyle fontStyle;

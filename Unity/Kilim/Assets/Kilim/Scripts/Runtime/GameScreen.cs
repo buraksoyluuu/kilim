@@ -23,7 +23,7 @@ namespace Kilim.Game
 
         private RectTransform _board;
         private Image[,] _cells;
-        private Text[,] _glyphs;
+        private Image[,] _glyphs;
         private Outline[,] _outlines;
         private float _pitch;
         private readonly HashSet<Cell> _ghost = new HashSet<Cell>();
@@ -78,7 +78,7 @@ namespace Kilim.Game
             Ui.Button(top, "II", Pause, Theme.Neutral, Theme.Ink, 100, 48, 110);
             var mid = Ui.VStack(top, 6, 0, TextAnchor.MiddleCenter);
             Ui.Size(mid.gameObject, -1, 110, 1);
-            Ui.Label(mid, _run.IsDaily ? "Günün Deseni" : $"Bölüm {L.Id}{(L.Boss ? " · Usta" : "")}", 40, Theme.Ink, TextAnchor.MiddleCenter, true, 50);
+            Ui.Label(mid, _run.IsDaily ? "Günün Deseni" : L.Boss ? $"Bölüm {L.Id} · Usta" : $"Bölüm {L.Id}", 40, Theme.Ink, TextAnchor.MiddleCenter, true, 50);
             var barRow = Ui.HStack(mid, 10, 0, TextAnchor.MiddleCenter, 40);
             barRow.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             var barHolder = Ui.Rect(barRow, "BarHolder");
@@ -98,6 +98,8 @@ namespace Kilim.Game
         private static void Marker(Transform bar, float t, string label)
         {
             var m = Ui.Box(bar, "Marker", Theme.Ink);
+            m.sprite = null;
+            m.type = Image.Type.Simple;
             var rt = (RectTransform)m.transform;
             rt.anchorMin = new Vector2(t, 0);
             rt.anchorMax = new Vector2(t, 1);
@@ -129,7 +131,7 @@ namespace Kilim.Game
             _pitch = (BoardSize - 2 * BoardPad + CellGap) / n;
             float cell = _pitch - CellGap;
             _cells = new Image[n, n];
-            _glyphs = new Text[n, n];
+            _glyphs = new Image[n, n];
             _outlines = new Outline[n, n];
             for (int r = 0; r < n; r++)
                 for (int c = 0; c < n; c++)
@@ -141,8 +143,8 @@ namespace Kilim.Game
                     rt.sizeDelta = new Vector2(cell, cell);
                     rt.anchoredPosition = new Vector2(BoardPad + c * _pitch, -(BoardPad + r * _pitch));
                     img.raycastTarget = false;
-                    var g = Ui.Label(img.transform, "", (int)(cell * 0.42f), Color.white);
-                    ((RectTransform)g.transform).Stretch();
+                    var g = Ui.Icon(img.transform, null, 0);
+                    ((RectTransform)g.transform).Stretch(cell * 0.28f, cell * 0.28f, cell * 0.28f, cell * 0.28f);
                     var o = img.gameObject.AddComponent<Outline>();
                     o.effectColor = Theme.Gold;
                     o.effectDistance = new Vector2(5, -5);
@@ -169,14 +171,13 @@ namespace Kilim.Game
                     {
                         string col = S.Board.ColorAt(r, c);
                         img.color = Theme.Motif(col);
-                        g.text = Theme.Glyph(string.IsNullOrEmpty(col) ? "" : col);
-                        g.color = new Color(1, 1, 1, 0.55f);
+                        Mark(g, string.IsNullOrEmpty(col) ? "" : col, new Color(1, 1, 1, 0.5f));
                         _outlines[r, c].enabled = S.Board.IsMatchAt(r, c);
                     }
                     else if (_ghost.Contains(here))
                     {
                         img.color = Theme.WithAlpha(Theme.Motif(_ghostColor), 0.45f);
-                        g.text = "";
+                        Mark(g, "", Color.clear);
                         _outlines[r, c].enabled = L.Matches(r, c, _ghostColor);
                     }
                     else
@@ -184,11 +185,18 @@ namespace Kilim.Game
                         // Boş hücre: motif rengi %22 + şekil işareti (renk körlüğü)
                         var mc = Theme.Motif(motif.Split('|')[0]);
                         img.color = Color.Lerp(Theme.CellEmpty, mc, 0.22f);
-                        g.text = Theme.Glyph(motif.Split('|')[0]);
-                        g.color = Theme.WithAlpha(mc, 0.6f);
+                        Mark(g, motif.Split('|')[0], Theme.WithAlpha(mc, 0.55f));
                         _outlines[r, c].enabled = false;
                     }
                 }
+        }
+
+        private static void Mark(Image g, string code, Color c)
+        {
+            var s = Art.Motif(code);
+            g.sprite = s;
+            g.color = c;
+            g.enabled = s != null;
         }
 
         /// <summary>Ekran noktasını, sürüklenen şekil için tahta hücre çapasına çevirir (mıknatıs dahil).</summary>
@@ -245,6 +253,7 @@ namespace Kilim.Game
             }
             if (!TutorialAllowsRotate()) return;
             S.Rotate(slot);
+            Audio.Play("rotate");
             Refresh();
         }
 
@@ -253,12 +262,12 @@ namespace Kilim.Game
         {
             SetGhost(null, null, null);
             if (!IsPlaying || !anchor.HasValue) return false;
-            if (!TutorialAllowsMove(slot, anchor.Value)) { App.Nav.Toast("Önce gösterilen hamleyi yap."); return false; }
+            if (!TutorialAllowsMove(slot, anchor.Value)) { Audio.Play("invalid"); App.Nav.Toast("Önce gösterilen hamleyi yap."); return false; }
             var piece = S.Tray[slot];
             bool rotated = piece.Rotation != 0;
             var res = S.Place(slot, anchor.Value);
             if (!res.Success) return false;
-            Audio.Place();
+            Audio.Place(res.MatchedCells > 0);
             if (S.PlacementCount % 5 == 1)
                 App.Analytics.Track("piece_placed", ("level", L.Id), ("index", S.PlacementCount), ("rotated", rotated), ("motif_match_cells", res.MatchedCells));
             Refresh();
@@ -341,7 +350,7 @@ namespace Kilim.Game
             if (_board == null) return;
             RefreshBoard();
             foreach (var s in _slots) s.Render();
-            _remaining.text = $"Kalan {S.RemainingPieces}";
+            _remaining.text = Loc.T($"Kalan {S.RemainingPieces}");
             float pct = (float)S.PatternPercent;
             _bar(pct);
             _percent.text = $"%{Mathf.RoundToInt(pct * 100)}";
@@ -355,6 +364,7 @@ namespace Kilim.Game
             if (st == SessionState.Won)
             {
                 _ending = true;
+                Audio.Play("win");
                 Refresh();
                 // 9.3 son parça oturunca dokuma animasyonu (1,4 sn), sonra Kazandın
                 App.StartCoroutine(WeaveAnim());
@@ -371,6 +381,7 @@ namespace Kilim.Game
             else if (st == SessionState.Failed)
             {
                 Refresh();
+                Audio.Play("fail");
                 App.Analytics.Track("level_fail", ("level", L.Id), ("attempt", _run.Attempt), ("pieces_left", S.RemainingPieces),
                     ("cells_left", S.Board.PlayableCells - S.Board.FilledCount));
                 App.Delay(0.6f, () => FailFlow.Show(_run, this)); // 600 ms tahta görünür
@@ -442,14 +453,14 @@ namespace Kilim.Game
             {
                 var step = L.Solution[0];
                 string colorName = L.Queue[step.QueueIndex].Color == "L" ? "Lacivert" : "Bu";
-                _hint.text = $"Nine: \"{colorName} parçayı aynı renkli izin üstüne koy.\"";
+                _hint.text = Loc.T($"Nine: \"{colorName} parçayı aynı renkli izin üstüne koy.\"");
                 SetGhost(Shape.From(step.Cells), new Cell(MinRow(step.Cells), MinCol(step.Cells)), L.Queue[step.QueueIndex].Color);
                 _ghost.Clear(); // yalnızca bir kez çiz (Refresh döngüsünü engelle)
             }
-            else if (!_run.IsDaily && L.Id == 2 && S.PlacementCount < 2) _hint.text = "Rengi motifle eşleşen parça desen yıldızı kazandırır.";
-            else if (!_run.IsDaily && L.Id == 4 && S.PlacementCount == 0) _hint.text = "Parçaya dokun: saat yönünde döner.";
-            else if (_run.IsDaily) _hint.text = "Süre yok, kaybetmek yok.";
-            else _hint.text = "";
+            else if (!_run.IsDaily && L.Id == 2 && S.PlacementCount < 2) _hint.text = Loc.T("Rengi motifle eşleşen parça desen yıldızı kazandırır.");
+            else if (!_run.IsDaily && L.Id == 4 && S.PlacementCount == 0) _hint.text = Loc.T("Parçaya dokun: saat yönünde döner.");
+            else if (_run.IsDaily) _hint.text = Loc.T("Süre yok, kaybetmek yok.");
+            else _hint.text = Loc.T("");
         }
 
         private static int MinRow(IReadOnlyList<Cell> cs) { int m = int.MaxValue; foreach (var c in cs) m = Mathf.Min(m, c.Row); return m; }
@@ -466,6 +477,7 @@ namespace Kilim.Game
                         : kv.Key == Booster.Swap ? "Seçtiğin parçayı kuyruğun sonuna gönderir."
                         : "Tezgâha 1 hücrelik ek parça koyar (desen yüzdesini düşürür).";
                     App.Nav.Confirm($"Yeni: {name}", $"{what}\n3 tane hediye!", "Anladım", null, null, null);
+                    Audio.Play("unlock");
                 }
         }
     }
@@ -583,8 +595,12 @@ namespace Kilim.Game
                 rt.pivot = new Vector2(0, 1);
                 rt.sizeDelta = new Vector2(cell, cell);
                 rt.anchoredPosition = new Vector2(c.Col * pitch, -c.Row * pitch);
-                var g = Ui.Label(img.transform, Theme.Glyph(color), (int)(cell * 0.45f), new Color(1, 1, 1, 0.6f));
-                ((RectTransform)g.transform).Stretch();
+                var s = Art.Motif(color);
+                if (s != null)
+                {
+                    var g = Ui.Icon(img.transform, s, 0, new Color(1, 1, 1, 0.5f));
+                    ((RectTransform)g.transform).Stretch(cell * 0.28f, cell * 0.28f, cell * 0.28f, cell * 0.28f);
+                }
             }
         }
     }
