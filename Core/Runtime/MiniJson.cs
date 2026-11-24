@@ -21,6 +21,80 @@ namespace Kilim.Core
             return v;
         }
 
+        /// <summary>Dictionary/IList/sayı/metin/bool/null değerini JSON'a yazar (kayıt dosyası için).</summary>
+        public static string Serialize(object value)
+        {
+            var sb = new StringBuilder();
+            Write(sb, value);
+            return sb.ToString();
+        }
+
+        private static void Write(StringBuilder sb, object v)
+        {
+            switch (v)
+            {
+                case null: sb.Append("null"); return;
+                case string s: WriteString(sb, s); return;
+                case bool b: sb.Append(b ? "true" : "false"); return;
+                case int i: sb.Append(i.ToString(CultureInfo.InvariantCulture)); return;
+                case long l: sb.Append(l.ToString(CultureInfo.InvariantCulture)); return;
+                case double d: sb.Append(d.ToString("R", CultureInfo.InvariantCulture)); return;
+                case float f: sb.Append(((double)f).ToString("R", CultureInfo.InvariantCulture)); return;
+                case System.Collections.IDictionary dict:
+                {
+                    sb.Append('{');
+                    bool first = true;
+                    foreach (System.Collections.DictionaryEntry e in dict)
+                    {
+                        if (!first) sb.Append(',');
+                        first = false;
+                        WriteString(sb, Convert.ToString(e.Key, CultureInfo.InvariantCulture));
+                        sb.Append(':');
+                        Write(sb, e.Value);
+                    }
+                    sb.Append('}');
+                    return;
+                }
+                case System.Collections.IEnumerable list:
+                {
+                    sb.Append('[');
+                    bool first = true;
+                    foreach (var item in list)
+                    {
+                        if (!first) sb.Append(',');
+                        first = false;
+                        Write(sb, item);
+                    }
+                    sb.Append(']');
+                    return;
+                }
+                default:
+                    if (v is IConvertible) { Write(sb, Convert.ToDouble(v, CultureInfo.InvariantCulture)); return; }
+                    throw new ArgumentException($"Serileştirilemeyen tür: {v.GetType()}");
+            }
+        }
+
+        private static void WriteString(StringBuilder sb, string s)
+        {
+            sb.Append('"');
+            foreach (char ch in s)
+            {
+                switch (ch)
+                {
+                    case '"': sb.Append("\\\""); break;
+                    case '\\': sb.Append("\\\\"); break;
+                    case '\n': sb.Append("\\n"); break;
+                    case '\r': sb.Append("\\r"); break;
+                    case '\t': sb.Append("\\t"); break;
+                    default:
+                        if (ch < 0x20) sb.Append("\\u").Append(((int)ch).ToString("x4"));
+                        else sb.Append(ch);
+                        break;
+                }
+            }
+            sb.Append('"');
+        }
+
         private sealed class Parser
         {
             private readonly string _s;

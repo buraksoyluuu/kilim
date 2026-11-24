@@ -68,6 +68,12 @@ namespace Kilim.Core
         /// <summary>Durum değişince (Won/Failed/Playing) tetiklenir.</summary>
         public event Action<SessionState> StateChanged;
 
+        /// <summary>Zen modu (Günün Deseni): tezgâh dolarsa son yerleşim kendiliğinden geri alınır, kayıp yok.</summary>
+        public bool ZenMode { get; set; }
+
+        /// <summary>Zen modunda otomatik geri alma olunca tetiklenir (geri alınan hücreler).</summary>
+        public event Action<IReadOnlyList<Cell>> AutoUndone;
+
         public GameSession(LevelData level)
         {
             _level = level ?? throw new ArgumentNullException(nameof(level));
@@ -208,6 +214,14 @@ namespace Kilim.Core
             if (State != SessionState.Playing || Board.IsFull) return;
             foreach (var p in _tray)
                 if (p != null && Board.FitsAnyRotation(p.Shape)) return;
+            if (ZenMode && _history.Count > 0)
+            {
+                var m = _history.Peek();
+                _lastActionWasPlacement = true;
+                Undo();
+                AutoUndone?.Invoke(m.Cells);
+                return;
+            }
             FailCount++;
             SetState(SessionState.Failed);
         }

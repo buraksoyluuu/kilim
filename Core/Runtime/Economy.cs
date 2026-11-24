@@ -63,6 +63,48 @@ namespace Kilim.Core
 
         public Wallet(int startingCoins) { Coins = startingCoins; }
 
+        public IReadOnlyDictionary<int, int> AllBestStars => _bestStars;
+
+        // ---------- Kayıt ----------
+
+        public Dictionary<string, object> Save()
+        {
+            var boosters = new Dictionary<string, object>();
+            foreach (var kv in _boosters) boosters[kv.Key.ToString()] = kv.Value;
+            var unlocked = new List<object>();
+            foreach (var b in _unlocked) unlocked.Add(b.ToString());
+            var stars = new Dictionary<string, object>();
+            foreach (var kv in _bestStars) stars[kv.Key.ToString()] = kv.Value;
+            return new Dictionary<string, object>
+            {
+                { "coins", Coins }, { "ilmek", Ilmek }, { "piggy", Piggy },
+                { "boosters", boosters }, { "unlocked", unlocked }, { "stars", stars },
+            };
+        }
+
+        public static Wallet Load(Dictionary<string, object> d)
+        {
+            var w = new Wallet(Data.Int(d, "coins"));
+            w.Ilmek = Data.Int(d, "ilmek");
+            w.Piggy = Data.Int(d, "piggy");
+            foreach (var kv in Data.Dict(d, "boosters"))
+                if (Enum.TryParse<Booster>(kv.Key, out var b)) w._boosters[b] = Convert.ToInt32(kv.Value);
+            foreach (var o in Data.List(d, "unlocked"))
+                if (Enum.TryParse<Booster>((string)o, out var b)) w._unlocked.Add(b);
+            foreach (var kv in Data.Dict(d, "stars"))
+                w._bestStars[int.Parse(kv.Key)] = Convert.ToInt32(kv.Value);
+            return w;
+        }
+
+        /// <summary>Ev görevine ilmek harcar.</summary>
+        public bool TrySpendIlmek(int amount)
+        {
+            if (amount < 0 || Ilmek < amount) return false;
+            Ilmek -= amount;
+            Changed?.Invoke();
+            return true;
+        }
+
         public int BoosterCount(Booster b) => _boosters[b];
         public bool IsUnlocked(Booster b) => _unlocked.Contains(b);
         public int BestStars(int levelId) => _bestStars.TryGetValue(levelId, out var s) ? s : 0;
