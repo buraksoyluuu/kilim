@@ -3,8 +3,11 @@
 Sahip: **[S]** = Burak (hesap/onay), **[G]** = geliştirici/Claude. Sıra önemli; ✅ = repoda hazır.
 
 ## A. Hesaplar ve kimlikler [S]
-- [ ] **Paket kimliği** seç: ör. `com.<şirket>.kilim` (iOS ve Android aynı). Unity › Player Settings › Identification.
-- [ ] **Apple Developer Program** (yıllık 99 $, şirket hesabı için D-U-N-S no gerekir).
+- [x] **Paket kimliği:** `app.kilim.game` (iOS ve Android aynı; FemmeCare'deki `app.<ürün>.<alt>` düzeni). Unity › Player Settings › Identification.
+- [x] **Apple Developer Program** — bireysel hesap aktif (Team ID 3UTU4G8NGA, yenileme 28 Eylül 2027).
+- [x] Apple App ID `app.kilim.game` kaydedildi; App Store Connect kaydı **Kilim: Pattern Puzzle** (Apple ID 6838868701, SKU `kilim-ios`, ana dil English (U.S.)).
+- [ ] App Store Connect › Business: yasal kimlik bilgisini güncelle → **Paid Apps Agreement** kabul → banka hesabı → vergi formları (W-8BEN) [S]. Bu olmadan satın alma ürünleri açılamaz.
+- [ ] AB Dijital Hizmetler Yasası (DSA) satıcı (trader) beyanı [S] — "trader" seçilirse adres/telefon AB mağazasında herkese açık görünür.
 - [ ] **Google Play Console** (tek seferlik 25 $; yeni kişisel hesaplarda yayından önce 12 test kullanıcısıyla 14 gün kapalı test zorunluluğu var — şirket hesabı önerilir).
 - [ ] **Firebase projesi** (Blaze planı) → `Backend/README.md` adımları.
 - [ ] **AdMob hesabı** → iOS ve Android uygulama + 2 reklam birimi (ödüllü, tam ekran). Mediation: ilk etapta AdMob + 2–3 ağ (ör. AppLovin, Unity Ads, Meta).

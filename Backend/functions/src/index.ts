@@ -111,7 +111,7 @@ export const appleNotifications = onRequest({ region: 'europe-west1', secrets: [
   try {
     const { SignedDataVerifier, Environment } = await import('@apple/app-store-server-library');
     const env = process.env.APPLE_ENV === 'Production' ? Environment.PRODUCTION : Environment.SANDBOX;
-    const v = new SignedDataVerifier([], true, env, process.env.APPLE_BUNDLE_ID ?? 'com.example.kilim');
+    const v = new SignedDataVerifier([], true, env, process.env.APPLE_BUNDLE_ID ?? 'app.kilim.game');
     const n = await v.verifyAndDecodeNotification(req.body.signedPayload);
     if ((n.notificationType === 'REFUND' || n.notificationType === 'REVOKE') && n.data?.signedTransactionInfo) {
       const tx = await v.verifyAndDecodeTransaction(n.data.signedTransactionInfo);

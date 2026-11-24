@@ -6,8 +6,8 @@ import * as path from 'path';
 
 export interface Verified { valid: boolean; sku?: string; txId?: string; reason?: string }
 
-const BUNDLE_ID = process.env.APPLE_BUNDLE_ID ?? 'com.example.kilim';
-const PACKAGE_NAME = process.env.ANDROID_PACKAGE ?? 'com.example.kilim';
+const BUNDLE_ID = process.env.APPLE_BUNDLE_ID ?? 'app.kilim.game';
+const PACKAGE_NAME = process.env.ANDROID_PACKAGE ?? 'app.kilim.game';
 
 function appleEnv(): Environment {
   return process.env.APPLE_ENV === 'Production' ? Environment.PRODUCTION : Environment.SANDBOX;
