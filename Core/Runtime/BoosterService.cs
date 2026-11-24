@@ -26,7 +26,8 @@ namespace Kilim.Core
 
         public BoosterUseResult Use(GameSession s, Booster b, int slot = -1)
         {
-            if (!_wallet.IsUnlocked(b)) return BoosterUseResult.Locked;
+            // Kilitliyken de stoktaki (ör. devam paketinden gelen) güçlendirici kullanılabilir; coin'le alım açılış ister.
+            if (!_wallet.IsUnlocked(b) && _wallet.BoosterCount(b) == 0) return BoosterUseResult.Locked;
             if (!IsApplicable(s, b, slot)) return BoosterUseResult.NotApplicable;
             if (!_wallet.TryConsumeBooster(b) && !_wallet.TrySpend(_cfg.BoosterPrice[b]))
                 return BoosterUseResult.NotEnoughCoins;

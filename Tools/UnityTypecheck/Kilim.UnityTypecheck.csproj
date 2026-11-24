@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Unity katmanının tip kontrolü (stub UnityEngine ile). Çalıştırılmaz; yalnızca derlenir. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <OutputType>Library</OutputType>
+    <NoWarn>CS0108;CS0114</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Core/Runtime/**/*.cs" Link="Core/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../Unity/Kilim/Assets/Kilim/Scripts/**/*.cs" Link="Game/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

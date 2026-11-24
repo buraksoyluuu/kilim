@@ -6,14 +6,21 @@ Kural: Sprint, kapsamındaki UAT testleri "Geçti" olmadan kapanmaz. Her PR baş
 
 | Sprint | Kapsam | UAT modülleri | Durum |
 |---|---|---|---|
-| 0 | Repo, Core kütüphanesi (kurallar + ekonomi), test koşucusu, CI, bölüm doğrulayıcı, Unity paket iskeleti | LVL | ✅ Core hazır (36 test geçiyor) |
-| 1 | Unity: tahta/tezgâh görünümü, sürükle-bırak, hayalet, mıknatıs, döndürme animasyonu, Kazandın/Kaybettin ekranları, 20 bölüm | CORE, ROT, TRAY, STAR, WIN, FAIL, TUT | Sırada |
-| 2 | Cüzdan kaydı, güçlendirici UI ve öğreticiler, devam merdiveni, kumbara, Dekor | ECO, BST, PIG, META, SAVE | |
-| 3 | Yaş kapısı, KVKK/UMP/ATT, AdMob mediation, IAP (StoreKit 2 / Play Billing 7), sunucu doğrulama, iade | AGE, PRV, ADS, IAP, OFFER | |
-| 4 | Günün Deseni, Tezgâh Yarışı, sezon/pass, remote config, analytics, performans, erişilebilirlik | DAILY, RACE, PASS, CFG, ANL, PERF, A11Y, L10N, INT, ETH | |
+| 0 | Repo, Core kütüphanesi (kurallar + ekonomi), test koşucusu, CI, bölüm doğrulayıcı, Unity paket iskeleti | LVL | ✅ |
+| 1 | Unity: tahta/tezgâh görünümü, sürükle-bırak, hayalet, mıknatıs, döndürme animasyonu, Kazandın/Kaybettin ekranları, 20 bölüm | CORE, ROT, TRAY, STAR, WIN, FAIL, TUT | ✅ v0.2 |
+| 2 | Cüzdan kaydı, güçlendirici UI ve öğreticiler, devam merdiveni, kumbara, Dekor | ECO, BST, PIG, META, SAVE | ✅ v0.2 (bulut kayıt hariç) |
+| 3 | Yaş kapısı, KVKK/UMP/ATT, AdMob mediation, IAP (StoreKit 2 / Play Billing 7), sunucu doğrulama, iade | AGE, PRV, ADS, IAP, OFFER | 🟡 Akış + kurallar + adaptörler hazır; SDK hesapları ve sunucu doğrulama bekliyor |
+| 4 | Günün Deseni, Tezgâh Yarışı, sezon/pass, remote config, analytics, performans, erişilebilirlik | DAILY, RACE, PASS, CFG, ANL, PERF, A11Y, L10N, INT, ETH | 🟡 İstemci tarafı hazır; yarış/saat/analitik backend'i, 8 dil, ses bekliyor |
 
 ## Sprint 0 notları
 - **Spec düzeltmesi:** Spec 1 §2 parça boyunu "2–5 hücre" diyor; bölüm 11, 12 ve 15'te 2×3 dikdörtgen (6 hücre) var. Core kuralı **2–6** olarak alındı (`LevelData.MaxPieceCells`). İçerik ekibi 5'e indirmek isterse üretici `RECTS` listesinden 2×3 çıkarılmalı.
 - **Geri Al:** yalnızca son eylem yerleştirme ise kullanılabilir; Değiştir ya da Tek İlmek'ten sonra pasif (geri alınan şeyin belirsiz olmaması için).
 - **Tek İlmek:** tezgâhın 4 yuvasına değil, 2 adet ek yuvaya gelir (devam paketi +2 Tek İlmek verdiği için).
 - **Devam sonrası:** oturum "oynanıyor"a döner; kayıp kontrolü bir sonraki yerleşimde tekrar çalışır.
+
+## v0.2 notları
+- Tüm ekranlar koddan kurulur (uGUI); sahne/prefab yok. Görsel varlıklar gelince `Ui.cs` / `Theme` üzerinden değiştirilir.
+- Yaş: yalnızca doğum yılı sorulduğu için yaş muhafazakâr hesaplanır (bu yıl − doğum yılı − 1).
+- Tek İlmek ve Değiştir, devam paketinden gelmişse kilitli olsa da kullanılabilir (aksi halde devam boşa giderdi).
+- Sezon kartı ödül tablosu tasarımda 5 seviye örnekliydi; 30 seviye kural tabanlı üretildi (`SeasonPass.FreeReward/GoldReward`). Tasarım nihai tabloyu verirse değiştirilir.
+- Ev restorasyonunda 5. alan "Bahçe" ve görev adları/notları eklendi (tasarımda 4 alan örneği vardı).

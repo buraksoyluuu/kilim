@@ -14,6 +14,10 @@ jobs:
         run: dotnet build Core/Kilim.Core.csproj -c Release
       - name: Birim testleri
         run: dotnet run --project Core.Tests -c Release
+      - name: Unity katmanı tip kontrolü (stub UnityEngine)
+        run: dotnet build Tools/UnityTypecheck/Kilim.UnityTypecheck.csproj -c Release
+      - name: Oyundaki bölüm dosyası kaynakla aynı
+        run: cmp Data/levels/region1.json Unity/Kilim/Assets/Kilim/Resources/levels/region1.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'

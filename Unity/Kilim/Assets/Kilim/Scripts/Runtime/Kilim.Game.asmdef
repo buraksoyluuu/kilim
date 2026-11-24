@@ -1,6 +1,6 @@
 {
   "name": "Kilim.Game",
   "rootNamespace": "Kilim.Game",
-  "references": ["Kilim.Core", "Unity.Addressables", "Unity.ResourceManager", "Unity.InputSystem"],
+  "references": ["Kilim.Core"],
   "autoReferenced": true
 }

@@ -21,7 +21,7 @@ docs/              Sprint planı, mimari notlar
 dotnet run --project Core.Tests                       # Core birim testleri (UAT ID'leriyle)
 python Tools/validate_levels.py Data/levels/region1.json  # bölümler çözülebilir + 3★ mümkün
 ```
-Unity: `Unity/Kilim` klasörünü Unity 6 LTS (6000.0.x) ile aç. `com.kilim.core` paketi `Core/` klasöründen yerel paket olarak gelir; ilk açılışta URP ve Addressables ayarlarını oluştur, `Data/levels/*.json` dosyalarını `levels/region{n}` adresiyle Addressables'a ekle.
+Unity: `Unity/Kilim` klasörünü Unity 6 LTS (6000.0.x) ile aç, Active Input Handling = Both yap, herhangi bir sahnede Play'e bas. Ayrıntı: [docs/test-rehberi.md](docs/test-rehberi.md).
 
 ## Kural
 - Oyun kuralları, ekonomi ve zaman mantığı **yalnızca Core'da**; Unity katmanı sadece görüntü, girdi ve SDK.
