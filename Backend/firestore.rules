@@ -1,0 +1,7 @@
+rules_version = '2';
+// İstemci Firestore'a doğrudan erişmez; tüm okuma/yazma Cloud Functions (admin SDK) üzerinden.
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -24,3 +24,11 @@ Kural: Sprint, kapsamındaki UAT testleri "Geçti" olmadan kapanmaz. Her PR baş
 - Tek İlmek ve Değiştir, devam paketinden gelmişse kilitli olsa da kullanılabilir (aksi halde devam boşa giderdi).
 - Sezon kartı ödül tablosu tasarımda 5 seviye örnekliydi; 30 seviye kural tabanlı üretildi (`SeasonPass.FreeReward/GoldReward`). Tasarım nihai tabloyu verirse değiştirilir.
 - Ev restorasyonunda 5. alan "Bahçe" ve görev adları/notları eklendi (tasarımda 4 alan örneği vardı).
+
+## v0.4 (24 Kasım 2026)
+- 160 bölüm (8 bölge × 20): hepsi çözülebilir, 3★ mümkün, 3★ çözüm yolu kayıtlı; bölge içi testere dişi zorluk, her bölgede 2 usta bölüm. Üretici: `Tools/gen_regions.py`.
+- Bölge 2'nin "çift motif" hücresi bu üretimde yok (çözücü desteklemiyor); Core destekliyor, içerik sonraki turda.
+- Ev restorasyonu yalnızca Bölge 1 için (20 görev); Bölge 2+ evleri içerik ve illüstrasyon bekliyor.
+- Backend (Firebase): `Backend/` — saat, config, bulut kayıt, makbuz doğrulama, iade bildirimleri, yarış, veri silme; 6 test.
+- Unity istemcisi `Backend.cs`: `Resources/backend.json` yoksa çevrimdışı mod.
+- Hukuki taslaklar `docs/legal/`, yayın kontrol listesi `docs/yayin-kontrol-listesi.md`, beta hattı `.github/workflows/beta.yml` + `fastlane/`.

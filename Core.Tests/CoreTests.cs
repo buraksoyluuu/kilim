@@ -49,10 +49,22 @@ namespace Kilim.Core.Tests
             }
         }
 
-        [Test("LVL-02, STAR-03")]
-        public static void Region1SolutionsReplayTo3Stars()
+        [Test("LVL-01")]
+        public static void AllLevelsValidAndSequential()
         {
-            foreach (var l in Region1)
+            for (int i = 0; i < All.Count; i++)
+            {
+                Assert.Equal(i + 1, All[i].Id, "bölüm sırası");
+                var errs = All[i].Validate();
+                Assert.True(errs.Count == 0, $"bölüm {All[i].Id}: {string.Join("; ", errs)}");
+            }
+            Assert.True(All.Count >= 160, $"en az 160 bölüm (şu an {All.Count})");
+        }
+
+        [Test("LVL-02, STAR-03")]
+        public static void AllSolutionsReplayTo3Stars()
+        {
+            foreach (var l in All)
             {
                 Assert.True(l.Solution.Count == l.Queue.Count, $"bölüm {l.Id} çözüm yolu eksik");
                 var s = new GameSession(l);

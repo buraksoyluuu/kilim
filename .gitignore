@@ -21,3 +21,9 @@ obj/
 .idea/
 .vs/
 .vscode/
+
+# Backend
+Backend/functions/node_modules/
+Backend/functions/lib/
+Backend/functions/.env
+Backend/functions/certs/*.p8

@@ -117,8 +117,16 @@ namespace UnityEngine
         public bool playOnAwake, loop; public float volume; public AudioClip clip; public bool isPlaying => false;
         public void Play() { } public void Stop() { } public void PlayOneShot(AudioClip c, float v) { }
     }
+    public enum RuntimePlatform { IPhonePlayer, Android, WindowsEditor, OSXEditor }
+    public static class Time { public static float unscaledTime => 0; }
+    public static class PlayerPrefs
+    {
+        public static string GetString(string k, string d) => d; public static void SetString(string k, string v) { }
+        public static void DeleteKey(string k) { } public static void Save() { }
+    }
     public static class Application
     {
+        public static RuntimePlatform platform => RuntimePlatform.Android;
         public static SystemLanguage systemLanguage => SystemLanguage.Turkish; public static bool isEditor => true;
         public static string persistentDataPath => ""; public static string version => "";
         public static int targetFrameRate; public static void OpenURL(string u) { }
@@ -153,6 +161,25 @@ namespace UnityEngine
     public enum RuntimeInitializeLoadType { AfterSceneLoad, BeforeSceneLoad }
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class RuntimeInitializeOnLoadMethodAttribute : Attribute { public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t) { } }
+}
+
+namespace UnityEngine.Networking
+{
+    public class DownloadHandler : IDisposable { public string text => ""; public void Dispose() { } }
+    public sealed class DownloadHandlerBuffer : DownloadHandler { }
+    public class UploadHandler : IDisposable { public void Dispose() { } }
+    public sealed class UploadHandlerRaw : UploadHandler { public UploadHandlerRaw(byte[] b) { } }
+    public sealed class UnityWebRequestAsyncOperation : UnityEngine.CustomYieldInstruction { public override bool keepWaiting => false; }
+    public sealed class UnityWebRequest : IDisposable
+    {
+        public enum Result { InProgress, Success, ConnectionError, ProtocolError, DataProcessingError }
+        public UnityWebRequest(string url, string method) { }
+        public DownloadHandler downloadHandler; public UploadHandler uploadHandler; public int timeout;
+        public Result result => Result.Success; public long responseCode => 200; public string error => "";
+        public void SetRequestHeader(string k, string v) { }
+        public UnityWebRequestAsyncOperation SendWebRequest() => null;
+        public void Dispose() { }
+    }
 }
 
 namespace UnityEngine.Events

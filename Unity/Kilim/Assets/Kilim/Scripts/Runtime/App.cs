@@ -26,6 +26,7 @@ namespace Kilim.Game
         public IIapService Iap { get; private set; }
         public IConsentService Consent { get; private set; }
         public ISaveStore Store { get; private set; }
+        public Backend Backend { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
@@ -66,12 +67,24 @@ namespace Kilim.Game
             Iap = new MockIapService(this);
 #endif
             Iap.Initialize(OnDeferredPurchase);
+            Backend = new Backend(this);
         }
 
         private void Start()
         {
             Analytics.Track("app_start", ("version", Application.version));
             Nav.Show(new SplashScreen());
+            StartCoroutine(Backend.Startup());
+        }
+
+        /// <summary>Bulut kaydı yereldekinden ilerideyse profil değiştirilir; açık ekran yeniden kurulur.</summary>
+        public void ReplaceProfile(PlayerProfile p)
+        {
+            p.FirstSessionDone = Profile.FirstSessionDone;
+            Meta = new Meta(p, Config, Clock);
+            ApplySettings();
+            Save();
+            if (Nav.Current is HomeScreen) GoHome();
         }
 
         private void LoadProfile()
@@ -85,7 +98,11 @@ namespace Kilim.Game
             ApplySettings();
         }
 
-        public void Save() => Store.Save(Profile.ToJson());
+        public void Save()
+        {
+            Store.Save(Profile.ToJson());
+            Backend?.CloudSave();
+        }
 
         public void ApplySettings()
         {
@@ -95,8 +112,13 @@ namespace Kilim.Game
             Loc.Set(Profile.Language);
         }
 
-        private void OnApplicationPause(bool paused) { if (paused && Meta != null) Save(); }
-        private void OnApplicationQuit() { if (Meta != null) { Profile.FirstSessionDone = true; Save(); } }
+        private void OnApplicationPause(bool paused)
+        {
+            if (paused && Meta != null) { Save(); Backend?.CloudSave(force: true); }
+            else if (!paused && Backend != null && Backend.Online) StartCoroutine(Backend.SyncRefunds());
+        }
+
+        private void OnApplicationQuit() { if (Meta != null) { Profile.FirstSessionDone = true; Save(); Backend?.CloudSave(force: true); } }
 
         // ---------------------------------------------------------------
         // Kanvas
@@ -258,7 +280,18 @@ namespace Kilim.Game
             Nav.Toast("Bekleyen ödeme onaylandı, içerik eklendi.");
         }
 
+        /// <summary>Sunucu doğrulaması (backend varsa) → teslim. Doğrulanamayan makbuz teslim edilmez.</summary>
         private void Grant(string sku, string tx)
+        {
+            Backend.VerifyPurchase(sku, tx, (valid, granted) =>
+            {
+                if (!valid) { Nav.Toast("Satın alma doğrulanamadı. Destek ile iletişime geç."); return; }
+                if (!granted) { Nav.Toast("Bu satın alma zaten teslim edilmiş."); return; }
+                GrantLocal(sku, tx);
+            });
+        }
+
+        private void GrantLocal(string sku, string tx)
         {
             int cents = PriceCents(sku);
             if (Meta.ApplyPurchase(sku, tx, cents) == PurchaseOutcome.Granted)
@@ -289,9 +322,11 @@ namespace Kilim.Game
         }
 
         /// <summary>Ayarlar › Verilerimi sil (UAT PRV-07): yerel kayıt silinir, sunucuya silme isteği, ilk açılış akışı.</summary>
-        public void DeleteAllData()
+        public void DeleteAllData() => StartCoroutine(DeleteAllDataCo());
+
+        private IEnumerator DeleteAllDataCo()
         {
-            Debug.Log($"[Kilim] Sunucu silme isteği gönderildi: {Profile.PlayerId}"); // gerçek: backend DELETE /players/{id}
+            yield return Backend.DeleteAccount();
             Store.Delete();
             Meta = new Meta(new PlayerProfile { Language = Loc.SystemDefault() }, Config, Clock);
             ApplySettings();

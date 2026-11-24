@@ -372,6 +372,7 @@ namespace Kilim.Game
                 {
                     var report = App.Meta.CompleteWin(_run);
                     App.Save();   // ödül tek işlemde kalıcı (UAT WIN-08)
+                    if (report.RaceFlag) App.Backend.RaceFlag(L.Id, _run.Attempt);
                     App.Analytics.Track("level_win", ("level", L.Id), ("stars", report.Stars), ("motif_pct", Mathf.RoundToInt((float)report.PatternPercent * 100)),
                         ("duration_s", report.DurationSeconds), ("attempts", _run.Attempt), ("boosters_used", _run.BoostersUsed.Count));
                     if (_run.IsDaily) App.Analytics.Track("daily_pattern", ("date", App.Meta.Daily.Today), ("stars", report.Stars));

@@ -16,10 +16,17 @@ jobs:
         run: dotnet run --project Core.Tests -c Release
       - name: Unity katmanı tip kontrolü (stub UnityEngine)
         run: dotnet build Tools/UnityTypecheck/Kilim.UnityTypecheck.csproj -c Release
-      - name: Oyundaki bölüm dosyası kaynakla aynı
-        run: cmp Data/levels/region1.json Unity/Kilim/Assets/Kilim/Resources/levels/region1.json
+      - name: Oyundaki bölüm dosyaları kaynakla aynı
+        run: for f in Data/levels/region*.json; do cmp "$f" "Unity/Kilim/Assets/Kilim/Resources/levels/$(basename $f)"; done
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Bölüm verisi çözücüyle doğrulanır
-        run: python Tools/validate_levels.py Data/levels/region1.json
+        run: python Tools/validate_levels.py Data/levels/region*.json
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: cd Backend/functions && npm ci && npm test

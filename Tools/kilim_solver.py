@@ -128,7 +128,7 @@ def gen(size,blocked,minp,maxp,ncol,rng):
     for p in pieces:
         col=rng.choice(COLORS[:ncol])
         for r,c in p: motif[r][c]=col
-        q.append({'shape':[list(x) for x in norm(p)],'color':col})
+        q.append({'shape':[list(x) for x in norm(p)],'color':col,'_at':min(r*size+c for r,c in p)})
     rng.shuffle(q)
     return {'size':size,'blocked':[list(b) for b in sorted(blocked)],'motif':motif,'queue':q}
 SIL={
@@ -205,7 +205,7 @@ def gen_rect(size,blocked,ncol,rng,allowed=RECTS):
     for p in pieces:
         col=rng.choice(COLORS[:ncol])
         for r,c in p: motif[r][c]=col
-        q.append({'shape':[list(x) for x in norm(p)],'color':col})
+        q.append({'shape':[list(x) for x in norm(p)],'color':col,'_at':min(r*size+c for r,c in p)})
     rng.shuffle(q)
     return {'size':size,'blocked':[list(b) for b in sorted(blocked)],'motif':motif,'queue':q}
 def gen_mix(size,blocked,ncol,rng,rect_ratio):
@@ -237,7 +237,7 @@ def gen_mix(size,blocked,ncol,rng,rect_ratio):
     for p in pieces:
         col=rng.choice(COLORS[:ncol])
         for r,c in p: motif[r][c]=col
-        q.append({'shape':[list(x) for x in norm(p)],'color':col})
+        q.append({'shape':[list(x) for x in norm(p)],'color':col,'_at':min(r*size+c for r,c in p)})
     rng.shuffle(q)
     return {'size':size,'blocked':[list(b) for b in sorted(blocked)],'motif':motif,'queue':q}
 def run(spec,out_path,seed=20261112,k=100):

@@ -10,6 +10,22 @@ namespace Kilim.Core.Tests
     {
         private static List<LevelData> _region1;
 
+        private static List<LevelData> _all;
+
+        /// <summary>Data/levels altındaki tüm bölgeler.</summary>
+        public static List<LevelData> All
+        {
+            get
+            {
+                if (_all != null) return _all;
+                _all = new List<LevelData>();
+                var dir = Path.Combine(AppContext.BaseDirectory, "levels");
+                foreach (var f in Directory.GetFiles(dir, "region*.json").OrderBy(f => f.Length).ThenBy(f => f))
+                    _all.AddRange(LevelParser.ParseMany(File.ReadAllText(f)));
+                return _all;
+            }
+        }
+
         public static List<LevelData> Region1
         {
             get

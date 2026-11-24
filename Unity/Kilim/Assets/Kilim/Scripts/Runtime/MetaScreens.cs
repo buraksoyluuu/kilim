@@ -92,6 +92,22 @@ namespace Kilim.Game
         {
             var m = App.Meta;
             if (m.Race.IsActive || App.Profile.RaceWeek != m.Race.WeekId || App.Profile.RaceRewardClaimedWeek == m.Race.WeekId) return;
+            if (App.Backend.Online)
+            {
+                // Sunucu otoritatif: sıra ve ödül sunucudan (UAT RACE-05..07)
+                var week = m.Race.WeekId;
+                App.Profile.RaceRewardClaimedWeek = week;
+                App.Save();
+                App.Backend.RaceClaim(week, (r, c) =>
+                {
+                    if (c <= 0) return;
+                    App.Meta.Wallet.AddCoins(c);
+                    if (r == 1) App.Profile.Cosmetics.Add($"frame-race-{week}");
+                    App.Save();
+                    App.Nav.Confirm("Tezgâh Yarışı bitti", $"{r}. oldun! +{Fmt.N(c)} coin", "Harika", null, null, null);
+                });
+                return;
+            }
             var (rank, coins) = m.Race.ClaimIfEnded(App.Profile, m.Race.BuildGroup(App.Profile));
             App.Save();
             App.Analytics.Track("race_result", ("week", m.Race.WeekId), ("rank", rank), ("flags", App.Profile.RaceFlags));
@@ -298,12 +314,21 @@ namespace Kilim.Game
                 foreach (var n in Race.Nicknames)
                 {
                     var name = n;
-                    Ui.Button(list, name, () => { p.RaceNickname = name; app.Save(); app.Nav.Show(new RaceScreen()); }, Theme.Panel, Theme.Ink, 100, 38);
+                    Ui.Button(list, name, () => { p.RaceNickname = name; app.Save(); app.Backend.RaceJoin(name); app.Nav.Show(new RaceScreen()); }, Theme.Panel, Theme.Ink, 100, 38);
                 }
                 return;
             }
-            var group = race.BuildGroup(p);
             var rows = Ui.Scroll(v, 8, 24);
+            if (app.Backend.Online)
+                app.Backend.RaceStandings(list => { if (rows != null) Render(rows, list ?? race.BuildGroup(p)); });
+            else Render(rows, race.BuildGroup(p));
+            Ui.Label(v, "Grup eşleşmesi sunucuda; çevrimdışı oynanan bölümler bağlantı gelince sayılır.", 26, Theme.Muted);
+            Tick();
+        }
+
+        private static void Render(RectTransform rows, System.Collections.Generic.List<RaceEntry> group)
+        {
+            Ui.Clear(rows);
             for (int i = 0; i < group.Count; i++)
             {
                 var e = group[i];
@@ -313,8 +338,6 @@ namespace Kilim.Game
                 Ui.Label(row, e.IsPlayer ? $"{e.Name} (sen)" : e.Name, 36, Theme.Ink, TextAnchor.MiddleLeft, e.IsPlayer);
                 Ui.Label(row, $"⚑ {e.Flags}", 36, Theme.Ink, TextAnchor.MiddleRight, true);
             }
-            Ui.Label(v, "Grup eşleşmesi sunucuda; çevrimdışı oynanan bölümler bağlantı gelince sayılır.", 26, Theme.Muted);
-            Tick();
         }
 
         public override void Tick()

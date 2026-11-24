@@ -1,11 +1,11 @@
-"""Bölüm dosyasını çözücüyle doğrular (CI). Kullanım: python Tools/validate_levels.py Data/levels/region1.json
+"""Bölüm dosyasını çözücüyle doğrular (CI). Kullanım: python Tools/validate_levels.py Data/levels/region*.json
 Her bölüm: çözülebilir mi, 3★ (tam desen) mümkün mü, stars.3 = oynanabilir hücre mi."""
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 from kilim_solver import solve_fast  # noqa: E402
 
-def main(path):
-    levels = json.load(open(path, encoding='utf-8'))
+def main(paths):
+    levels = [lv for path in paths for lv in json.load(open(path, encoding='utf-8'))]
     bad = 0
     for lv in levels:
         size = lv['size']
@@ -21,4 +21,4 @@ def main(path):
     return 1 if bad else 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1]))
+    sys.exit(main(sys.argv[1:]))
