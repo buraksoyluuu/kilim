@@ -1,0 +1,21 @@
+name: core-tests
+on:
+  push:
+  pull_request:
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Core (netstandard2.1, Unity ile aynı hedef)
+        run: dotnet build Core/Kilim.Core.csproj -c Release
+      - name: Birim testleri
+        run: dotnet run --project Core.Tests -c Release
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bölüm verisi çözücüyle doğrulanır
+        run: python Tools/validate_levels.py Data/levels/region1.json

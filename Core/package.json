@@ -1,0 +1,7 @@
+{
+  "name": "com.kilim.core",
+  "version": "0.1.0",
+  "displayName": "Kilim Core",
+  "description": "Kilim oyun kuralları (Unity'den bağımsız).",
+  "unity": "6000.0"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Kilim.Core",
+  "rootNamespace": "Kilim.Core",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "noEngineReferences": true
+}
