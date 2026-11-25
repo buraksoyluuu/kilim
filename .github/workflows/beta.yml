@@ -97,4 +97,8 @@ jobs:
           APPSTORE_KEY_ID: U4H4GYWYG8                               # "Kilim CI" anahtarı (gizli değil)
           APPSTORE_ISSUER_ID: 3da5eccb-1939-4eb8-9db6-8ebf7aee4c9a   # ekip kimliği (gizli değil)
           APPSTORE_P8: ${{ secrets.APPSTORE_P8 }}
+          APPLE_DIST_CERT: ${{ secrets.APPLE_DIST_CERT }}
           APPLE_TEAM_ID: 3UTU4G8NGA
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: dist-cert, path: dist-cert, retention-days: 1, if-no-files-found: ignore }
