@@ -23,7 +23,8 @@ obj/
 .vscode/
 
 # Backend
-Backend/functions/node_modules/
-Backend/functions/lib/
-Backend/functions/.env
-Backend/functions/certs/*.p8
+Backend/worker/node_modules/
+Backend/worker/lib/
+Backend/worker/.env
+Backend/worker/certs/*.p8
+Backend/worker/.wrangler/

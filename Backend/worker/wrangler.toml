@@ -1,0 +1,18 @@
+name = "kilim-api"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kilim"
+database_id = "REPLACE_WITH_D1_ID"   # wrangler d1 create kilim çıktısındaki id
+
+[vars]
+FIREBASE_PROJECT_ID = "kilim-game"
+APPLE_BUNDLE_ID = "app.kilim.game"
+ANDROID_PACKAGE = "app.kilim.game"
+APPLE_ENV = "Sandbox"                # yayında "Production"
+
+# Gizli değerler: wrangler secret put <AD>
+#   APPLE_PRIVATE_KEY (.p8 içeriği), APPLE_KEY_ID, APPLE_ISSUER_ID
+#   GOOGLE_SERVICE_ACCOUNT (JSON), RTDN_TOKEN (Google bildirim uç noktası paylaşılan anahtarı)

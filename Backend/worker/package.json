@@ -1,0 +1,16 @@
+{
+  "name": "kilim-worker",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.test.json && node --test lib/test/*.test.js",
+    "db:init": "wrangler d1 execute kilim --remote --file=schema.sql",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241112.0",
+    "@types/node": "^20.17.0",
+    "typescript": "^5.6.0",
+    "wrangler": "^3.90.0"
+  }
+}

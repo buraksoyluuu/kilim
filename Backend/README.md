@@ -1,6 +1,7 @@
-# Kilim backend (Firebase)
+# Kilim backend (Cloudflare Workers + D1, ücretsiz)
 
-Tek HTTPS uç noktası `api` (Cloud Functions v2, europe-west1) + Firestore. Kimlik: Firebase Anonymous Auth (istemci REST ile alır).
+Kimlik: **Firebase Anonymous Auth** (ücretsiz Spark planı, proje `kilim-game`). İstemci REST ile anonim hesap alır, ID token'ı `Authorization: Bearer` ile gönderir; Worker token'ı Google'ın açık anahtarlarıyla doğrular.
+Veri: **Cloudflare D1** (`docs` tablosu, yol → JSON). İş kuralları `worker/src/logic.ts` (testli).
 
 | Uç | İş | UAT |
 |---|---|---|
@@ -9,21 +10,22 @@ Tek HTTPS uç noktası `api` (Cloud Functions v2, europe-west1) + Firestore. Kim
 | `GET/PUT /save` | Bulut kayıt; daha ileri bölüm kazanır | SAVE-01..05 |
 | `POST /purchase` | Makbuz doğrulama (Apple App Store Server API / Google Play Developer API), işlem başına tek teslim | IAP-01..11 |
 | `GET /entitlements`, `POST /entitlements/ack` | İade edilen işlemler → istemci geri alır | IAP-10 |
-| `POST /race/join`, `POST /race/flag`, `GET /race`, `POST /race/claim` | Tezgâh Yarışı: 30'luk gruplar, bayrak kuralları, ödül | RACE-01..07 |
+| `POST /race/join`, `POST /race/flag`, `GET /race`, `POST /race/claim` | Tezgâh Yarışı | RACE-01..07 |
 | `POST /delete` | KVKK/GDPR veri silme | PRV-07 |
-| `appleNotifications`, `googleNotifications` | Mağaza iade bildirimleri | IAP-10 |
+| `POST /notify/apple`, `POST /notify/google?token=…` | Mağaza iade bildirimleri (Apple/Google API'sinden yeniden doğrulanır) | IAP-10 |
 
 ## Kurulum
-1. Firebase projesi (Blaze planı: dış API çağrısı için gerekli) → Authentication › Anonymous açık, Firestore (europe-west) açık.
-2. `npm i -g firebase-tools && firebase login && firebase use <proje-id>` (`.firebaserc`'deki `kilim-game`'u değiştir).
-3. Gizli anahtarlar:
-   - `firebase functions:secrets:set APPLE_PRIVATE_KEY` (App Store Connect › Users and Access › Integrations › In-App Purchase anahtarı, .p8 içeriği)
-   - `firebase functions:secrets:set GOOGLE_SERVICE_ACCOUNT` (Play Console'a bağlı servis hesabı JSON'u)
-   - Ortam: `APPLE_KEY_ID`, `APPLE_ISSUER_ID`, `APPLE_BUNDLE_ID`, `APPLE_APP_ID`, `APPLE_ENV` (Sandbox/Production), `ANDROID_PACKAGE` → `functions/.env`
-   - Apple kök sertifikaları: `functions/certs/` içine `AppleRootCA-G3.cer` (apple.com/certificateauthority).
-4. `cd functions && npm ci && npm test && cd .. && firebase deploy --only functions,firestore`
-5. App Store Connect › App Information › Server Notifications V2 URL = `appleNotifications` adresi; Play Console › Monetization setup › Real-time notifications → Pub/Sub push = `googleNotifications` adresi.
-6. Unity: `Assets/Kilim/Resources/backend.json` → `{ "baseUrl": "https://europe-west1-<proje>.cloudfunctions.net/api", "apiKey": "<Web API key>" }`. Dosya yoksa oyun çevrimdışı modda çalışır.
+1. Cloudflare hesabı (ücretsiz) → API token: "Edit Cloudflare Workers" şablonu + D1 Edit izni.
+2. `cd worker && npm ci`
+3. `CLOUDFLARE_API_TOKEN=… npx wrangler d1 create kilim` → çıktıdaki `database_id`'yi `wrangler.toml`'a yaz.
+4. `npx wrangler d1 execute kilim --remote --file=schema.sql`
+5. `npx wrangler deploy` → adres `https://kilim-api.<hesap>.workers.dev`
+6. Gizli değerler (mağaza hesapları hazır olunca): `npx wrangler secret put APPLE_PRIVATE_KEY` (ve `APPLE_KEY_ID`, `APPLE_ISSUER_ID`, `GOOGLE_SERVICE_ACCOUNT`, `RTDN_TOKEN`).
+7. App Store Connect › App Information › App Store Server Notifications V2 → `…/notify/apple`; Play Console › Monetization setup › Real-time developer notifications → Pub/Sub push `…/notify/google?token=<RTDN_TOKEN>`.
+8. Unity `Assets/Kilim/Resources/backend.json` → `baseUrl` = Worker adresi.
 
 ## Test
-`cd functions && npm test` — iş kuralları bellek deposuyla (6 test).
+`cd worker && npm test` (iş kuralları + JWT doğrulama, 8 test) · `npx wrangler dev --local` ile yerel deneme.
+
+## Sınırlar
+D1'de etkileşimli işlem yok: aynı belgeye eşzamanlı yazmada son yazan kazanır (oyuncu başına belge olduğu için risk düşük). Ücretsiz plan: günde 100.000 istek, D1 5 GB.

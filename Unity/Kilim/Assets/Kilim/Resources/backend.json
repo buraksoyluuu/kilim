@@ -1,4 +1,4 @@
 {
-  "baseUrl": "https://europe-west1-kilim-game.cloudfunctions.net/api",
+  "baseUrl": "https://kilim-api.REPLACE.workers.dev",
   "apiKey": "AIzaSyBuHFqeYrYU2gCqVPjjlXmHeYv9XBQK56E"
 }

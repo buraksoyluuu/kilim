@@ -1,4 +1,4 @@
-// Depolama soyutlaması: üretimde Firestore, testlerde bellek. Tüm yazmalar işlem (transaction) içinde.
+// Depolama soyutlaması: üretimde Cloudflare D1 (src/d1store.ts), testlerde bellek.
 export type Doc = Record<string, any>;
 
 export interface Tx {
