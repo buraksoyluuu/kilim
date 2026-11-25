@@ -1,0 +1,7 @@
+{
+  "name": "Kilim.Editor",
+  "rootNamespace": "Kilim.EditorTools",
+  "references": ["Kilim.Game", "Kilim.Core"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false
+}

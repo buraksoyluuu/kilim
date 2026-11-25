@@ -1,5 +1,7 @@
-# Beta build: Android AAB → Play internal testing, iOS → TestFlight. Elle tetiklenir (Actions › Beta build › Run).
-# Gerekli secret'lar: docs/yayin-kontrol-listesi.md › G. Ön koşul: Unity/Kilim/ProjectSettings commit edilmiş olmalı.
+# Test build'leri. Elle tetiklenir: Actions › Beta build › Run workflow.
+#  - Android: APK (telefona doğrudan kurulum) artifact olarak indirilir; Play anahtarı varsa AAB internal teste de gider.
+#  - iOS: Unity Xcode projesi → macOS'ta otomatik imzalama (App Store Connect API anahtarı) → TestFlight.
+# Secret'lar: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD; iOS için APPSTORE_KEY_ID, APPSTORE_ISSUER_ID, APPSTORE_P8.
 name: Beta build
 on:
   workflow_dispatch:
@@ -7,6 +9,8 @@ on:
       platforms:
         description: "android, ios ya da both"
         default: both
+env:
+  KILIM_BUILD: ${{ github.run_number }}
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -23,7 +27,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { lfs: true }
       - uses: actions/cache@v4
         with: { path: Unity/Kilim/Library, key: Library-Android-${{ hashFiles('Unity/Kilim/Packages/manifest.json') }} }
       - uses: game-ci/unity-builder@v4
@@ -33,21 +36,12 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           projectPath: Unity/Kilim
+          unityVersion: 6000.0.30f1
           targetPlatform: Android
-          androidExportType: androidAppBundle
-          androidKeystoreName: kilim.keystore
-          androidKeystoreBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          androidKeystorePass: ${{ secrets.ANDROID_KEYSTORE_PASS }}
-          androidKeyaliasName: ${{ secrets.ANDROID_KEYALIAS_NAME }}
-          androidKeyaliasPass: ${{ secrets.ANDROID_KEYALIAS_PASS }}
-          versioning: Semantic
-      - uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: ${{ vars.ANDROID_PACKAGE }}
-          releaseFiles: build/Android/*.aab
-          track: internal
-          status: completed
+          buildMethod: Kilim.EditorTools.BuildScript.BuildFromCommandLine
+          customParameters: -customBuildPath build/Android/Kilim.apk
+      - uses: actions/upload-artifact@v4
+        with: { name: kilim-android-apk, path: Unity/Kilim/build/Android/*.apk, retention-days: 14 }
 
   ios:
     needs: tests
@@ -55,7 +49,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { lfs: true }
       - uses: actions/cache@v4
         with: { path: Unity/Kilim/Library, key: Library-iOS-${{ hashFiles('Unity/Kilim/Packages/manifest.json') }} }
       - uses: game-ci/unity-builder@v4
@@ -63,9 +56,14 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        with: { projectPath: Unity/Kilim, targetPlatform: iOS, versioning: Semantic }
+        with:
+          projectPath: Unity/Kilim
+          unityVersion: 6000.0.30f1
+          targetPlatform: iOS
+          buildMethod: Kilim.EditorTools.BuildScript.BuildFromCommandLine
+          customParameters: -customBuildPath build/iOS/Kilim
       - uses: actions/upload-artifact@v4
-        with: { name: ios-xcode, path: build/iOS }
+        with: { name: ios-xcode, path: Unity/Kilim/build/iOS, retention-days: 3 }
 
   testflight:
     needs: ios
@@ -74,12 +72,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: ios-xcode, path: build/iOS }
-      - run: bundle install || gem install fastlane
+      - run: gem install fastlane --no-document
       - run: fastlane ios beta
         env:
           APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
           APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
           APPSTORE_P8: ${{ secrets.APPSTORE_P8 }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          MATCH_GIT_URL: ${{ vars.MATCH_GIT_URL }}
-          IOS_BUNDLE_ID: ${{ vars.IOS_BUNDLE_ID }}
+          APPLE_TEAM_ID: 3UTU4G8NGA

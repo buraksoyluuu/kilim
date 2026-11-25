@@ -10,6 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../Core/Runtime/**/*.cs" Link="Core/%(RecursiveDir)%(Filename)%(Extension)" />
-    <Compile Include="../../Unity/Kilim/Assets/Kilim/Scripts/**/*.cs" Link="Game/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../Unity/Kilim/Assets/Kilim/Scripts/Runtime/**/*.cs" Link="Game/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>
