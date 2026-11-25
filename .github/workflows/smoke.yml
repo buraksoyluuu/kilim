@@ -1,0 +1,33 @@
+# Oyun ekranlarının açıldığını doğrulayan PlayMode testi (Unity, Linux). Elle ya da her push'ta.
+name: PlayMode smoke
+on:
+  workflow_dispatch:
+jobs:
+  playmode:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jlumbroso/free-disk-space@v1.3.1
+        with: { tool-cache: false, android: true, large-packages: false }
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: Unity/Kilim/Library
+          key: Library-Test-${{ hashFiles('Unity/Kilim/Packages/manifest.json') }}
+      - uses: game-ci/unity-test-runner@v4
+        id: t
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: Unity/Kilim
+          unityVersion: 6000.0.30f1
+          testMode: playmode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playmode-results
+          path: ${{ steps.t.outputs.artifactsPath }}
+          retention-days: 7
+
