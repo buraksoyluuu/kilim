@@ -68,3 +68,9 @@ Sahip: **[S]** = Burak (hesap/onay), **[G]** = geliştirici/Claude. Sıra öneml
 
 ## H. Soft launch (adım 6, sonrası)
 Önerilen pazar: Kanada veya Avustralya + Filipinler (ucuz CPI ile retention ölçümü). 4 hafta; LTV180 ≥ 1,2×CPI olmadan ücretli kullanıcı edinimi (UA) yok.
+
+## Test build durumu (25 Kasım 2026)
+- [x] App Store Connect API anahtarı "Kilim CI" (Admin) — Key ID `U4H4GYWYG8`, Issuer `3da5eccb-1939-4eb8-9db6-8ebf7aee4c9a`; .p8 bilgisayara indirildi (bir kez indirilebilir, yedekle).
+- [ ] GitHub secret `APPSTORE_P8` = `AuthKey_U4H4GYWYG8.p8` içeriği [S]
+- [ ] GitHub secret `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD` [S]
+- [ ] Actions › Beta build › Run → Android APK artifact'ını indir, telefona kur; iPhone'da TestFlight uygulaması.

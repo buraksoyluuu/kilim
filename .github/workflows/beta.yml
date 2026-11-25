@@ -1,7 +1,7 @@
 # Test build'leri. Elle tetiklenir: Actions › Beta build › Run workflow.
 #  - Android: APK (telefona doğrudan kurulum) artifact olarak indirilir; Play anahtarı varsa AAB internal teste de gider.
 #  - iOS: Unity Xcode projesi → macOS'ta otomatik imzalama (App Store Connect API anahtarı) → TestFlight.
-# Secret'lar: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD; iOS için APPSTORE_KEY_ID, APPSTORE_ISSUER_ID, APPSTORE_P8.
+# Secret'lar: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD; iOS için APPSTORE_P8 (AuthKey_U4H4GYWYG8.p8 içeriği).
 name: Beta build
 on:
   workflow_dispatch:
@@ -75,7 +75,7 @@ jobs:
       - run: gem install fastlane --no-document
       - run: fastlane ios beta
         env:
-          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
-          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_KEY_ID: U4H4GYWYG8                               # "Kilim CI" anahtarı (gizli değil)
+          APPSTORE_ISSUER_ID: 3da5eccb-1939-4eb8-9db6-8ebf7aee4c9a   # ekip kimliği (gizli değil)
           APPSTORE_P8: ${{ secrets.APPSTORE_P8 }}
           APPLE_TEAM_ID: 3UTU4G8NGA
