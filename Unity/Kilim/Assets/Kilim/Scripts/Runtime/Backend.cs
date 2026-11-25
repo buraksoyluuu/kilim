@@ -88,10 +88,17 @@ namespace Kilim.Game
         /// <summary>Makbuzu sunucuda doğrular. done(valid, granted). Backend yoksa (çevrimdışı mod) yerelde teslim edilir.</summary>
         public void VerifyPurchase(string sku, string tx, Action<bool, bool> done)
         {
-            if (!Online) { done(true, true); return; }
+            // Çevrimdışı ya da editör test mağazası (tx "test-…"): yerelde teslim.
+            if (!Online || tx == null || tx.StartsWith("test-")) { done(true, true); return; }
             var body = new Dictionary<string, object> { { "platform", Platform }, { "sku", sku }, { "transactionId", tx } };
             _app.StartCoroutine(Call("POST", "/purchase", body,
-                r => done(Data.Bool(r, "valid"), Data.Bool(r, "granted")),
+                r =>
+                {
+                    // Sunucuda mağaza anahtarları henüz tanımlı değilse (beta) doğrulama atlanır, yerelde teslim edilir.
+                    var reason = Data.Str(r, "reason", "");
+                    if (reason.EndsWith("_not_configured")) { done(true, true); return; }
+                    done(Data.Bool(r, "valid"), Data.Bool(r, "granted"));
+                },
                 () => done(false, false)));
         }
 

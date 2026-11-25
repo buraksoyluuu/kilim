@@ -5,7 +5,7 @@ compatibility_date = "2024-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "kilim"
-database_id = "REPLACE_WITH_D1_ID"   # wrangler d1 create kilim çıktısındaki id
+database_id = "ac8444c9-0524-445e-be77-1d79e9eedfcc"
 
 [vars]
 FIREBASE_PROJECT_ID = "kilim-game"
