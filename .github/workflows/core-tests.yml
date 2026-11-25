@@ -23,6 +23,8 @@ jobs:
           python-version: '3.12'
       - name: Bölüm verisi çözücüyle doğrulanır
         run: python Tools/validate_levels.py Data/levels/region*.json
+      - name: Çeviri tablosu (çift anahtar açılışı çökertir)
+        run: python Tools/check_loc.py
   backend:
     runs-on: ubuntu-latest
     steps:

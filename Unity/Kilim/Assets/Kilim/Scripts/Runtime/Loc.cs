@@ -157,18 +157,16 @@ namespace Kilim.Game
             { "Değiştirilecek parçaya dokun.", "Tap the piece to swap." }, { "Geri alınacak yerleşim yok.", "Nothing to undo." },
             { "Şu an kullanılamaz.", "Can't use this right now." }, { "Duraklatıldı", "Paused" },
             { "Günün deseni kaydedilmez, istediğin zaman yeniden başlayabilirsin.", "Today's pattern isn't saved mid-way; restart any time." },
-            { "Yeniden başlat", "Restart" }, { "Ana menü", "Main menu" },
-            { "Nine: \"Lacivert parçayı aynı renkli izin üstüne koy.\"", "Granny: \"Place the navy piece on the matching outline.\"" },
+                        { "Nine: \"Lacivert parçayı aynı renkli izin üstüne koy.\"", "Granny: \"Place the navy piece on the matching outline.\"" },
             { "Nine: \"Bu parçayı aynı renkli izin üstüne koy.\"", "Granny: \"Place this piece on the matching outline.\"" },
             { "Rengi motifle eşleşen parça desen yıldızı kazandırır.", "Pieces matching the motif colour earn pattern stars." },
             { "Parçaya dokun: saat yönünde döner.", "Tap a piece to rotate it clockwise." }, { "Süre yok, kaybetmek yok.", "No timer, no losing." },
-            { "Yeni: {0}", "New: {0}" }, { "{0}\n3 tane hediye!", "{0}\n3 free to start!" },
+            { "{0}\n3 tane hediye!", "{0}\n3 free to start!" },
             { "Son yerleşimi geri alır.", "Undoes your last placement." }, { "Seçtiğin parçayı kuyruğun sonuna gönderir.", "Sends the chosen piece to the back of the queue." },
             { "Tezgâha 1 hücrelik ek parça koyar (desen yüzdesini düşürür).", "Adds a 1-cell piece to the loom (lowers your pattern score)." },
 
             // Sonuç
-            { "Muhteşem!", "Magnificent!" }, { "Çok güzel!", "Lovely!" }, { "Tamamlandı!", "Complete!" }, { "Desen %{0}", "Pattern {0}%" },
-            { "Günün deseni: +{0} coin ve damga", "Pattern of the Day: +{0} coins and a stamp" },
+            { "Muhteşem!", "Magnificent!" }, { "Çok güzel!", "Lovely!" }, { "Tamamlandı!", "Complete!" },             { "Günün deseni: +{0} coin ve damga", "Pattern of the Day: +{0} coins and a stamp" },
             { "Bugünün damgası zaten alındı.", "You've already earned today's stamp." },
             { "100 coin ve damga için 3★ gerekli.", "Get 3★ for 100 coins and a stamp." },
             { "+{0} ilmek", "+{0} knots" }, { "Kumbaraya +{0}", "Piggy bank +{0}" }, { "Tezgâh Yarışı: +1 bayrak", "Loom Race: +1 flag" },
@@ -179,7 +177,7 @@ namespace Kilim.Game
             { "Devam · ● {0}", "Continue · ● {0}" }, { "Devam · {0}", "Continue · {0}" },
             { "Coin {0} / {1} · {2} coin paketi alınır, {3} harcanır", "Coins {0} / {1} · buys the {2}-coin pack and spends {3}" },
             { "Reklam izle · ücretsiz devam", "Watch ad · continue free" }, { "Pes et", "Give up" },
-            { "Bölümü yeniden başlat?", "Restart the level?" }, { "Zor bir bölüm! Sana 1 Geri Al hediye ediyoruz.", "Tough one! Here's a free Undo." },
+            { "Zor bir bölüm! Sana 1 Geri Al hediye ediyoruz.", "Tough one! Here's a free Undo." },
 
             // Reklam / satın alma
             { "Şu an reklam yok, birazdan tekrar dene.", "No ad available right now. Try again shortly." },
@@ -202,18 +200,16 @@ namespace Kilim.Game
             { "Test satın alma", "Test purchase" }, { "Satın al", "Buy" }, { "Bekleyen ödeme (5 sn)", "Pending payment (5 s)" },
 
             // Ana ekran ve meta
-            { "✦ {0} ilmek", "✦ {0} knots" }, { "Ayarlar", "Settings" }, { "Kumbara", "Piggy bank" },
-            { "Kumbara\n{0}", "Piggy bank\n{0}" }, { "Kumbara\n{0} · dolu!", "Piggy bank\n{0} · full!" },
+            { "✦ {0} ilmek", "✦ {0} knots" }, { "Ayarlar", "Settings" },             { "Kumbara\n{0}", "Piggy bank\n{0}" }, { "Kumbara\n{0} · dolu!", "Piggy bank\n{0} · full!" },
             { "Sezon\nSeviye {0}", "Season\nLevel {0}" }, { "Günlük ✓\nSeri {0}", "Daily ✓\nStreak {0}" }, { "Günlük •\nSeri {0}", "Daily •\nStreak {0}" },
-            { "Yarış", "Race" }, { "Yarış\n{0}", "Race\n{0}" }, { "Yarış\nCuma", "Race\nFriday" },
+            { "Yarış\n{0}", "Race\n{0}" }, { "Yarış\nCuma", "Race\nFriday" },
             { "Başlangıç paketi · bir kez", "Starter pack · one time" },
             { "2.000 coin + 3'er güçlendirici + 24 sa reklamsız · {0}", "2,000 coins + 3 of each booster + 24 h ad-free · {0}" },
             { "2.000 coin + 3'er güçlendirici + 24 sa reklamsız", "2,000 coins + 3 of each booster + 24 h ad-free" },
             { "Nine: \"{0}\"", "Granny: \"{0}\"" }, { "Ev pırıl pırıl oldu, ellerine sağlık.", "The house is spotless. Bless your hands." },
             { "Yeni desenler yakında", "New patterns coming soon" },
             { "Bu arada Günün Deseni ve Tezgâh Yarışı açık.", "Meanwhile, Pattern of the Day and the Loom Race are open." },
-            { "Bölüm {0}'i 3★ yap", "Get 3★ on level {0}" }, { "Ev", "Home" }, { "Ev •", "Home •" }, { "Mağaza", "Shop" },
-            { "Tezgâh Yarışı bitti", "Loom Race finished" }, { "{0}. oldun! +{1} coin", "You placed #{0}! +{1} coins" },
+            { "Bölüm {0}'i 3★ yap", "Get 3★ on level {0}" }, { "Ev •", "Home •" },             { "Tezgâh Yarışı bitti", "Loom Race finished" }, { "{0}. oldun! +{1} coin", "You placed #{0}! +{1} coins" },
             { "Reklamsız", "Ad-free" }, { "Tam ekran reklamlar kapanır; ödüllü reklamlar isteğe bağlı kalır.", "Full-screen ads turn off; rewarded ads stay optional." },
             { "En popüler", "Most popular" }, { "En avantajlı", "Best value" },
             { "Satın alımları geri yükle", "Restore purchases" }, { "Kullanım koşulları · Gizlilik", "Terms of use · Privacy" },
@@ -233,8 +229,8 @@ namespace Kilim.Game
             { "Yarış Cuma 10:00'da başlar, Pazar 22:00'de biter.", "The race starts Friday 10:00 and ends Sunday 22:00." },
             { "Takma adını seç", "Choose your nickname" }, { "{0} (sen)", "{0} (you)" },
             { "Grup eşleşmesi sunucuda; çevrimdışı oynanan bölümler bağlantı gelince sayılır.", "Groups are matched on the server; levels played offline count once you reconnect." },
-            { "Nine'nin Evi", "Granny's House" }, { "{0} · {1}/4", "{0} · {1}/4" }, { "Tamam ✓", "Done ✓" },
-            { "{0} ilmek · Yap", "{0} knots · Do it" }, { "{0} ilmek daha", "{0} more knots" }, { "{0} ilmek · sırada bekliyor", "{0} knots · up next" },
+            { "{0} · {1}/4", "{0} · {1}/4" }, { "Tamam ✓", "Done ✓" },
+            { "{0} ilmek · Yap", "{0} knots · Do it" }, { "{0} ilmek · sırada bekliyor", "{0} knots · up next" },
             { "Güzel olmuş", "Looks lovely" }, { "Stil seç", "Choose a style" }, { "Sonra ücretsiz değiştirebilirsin.", "You can change it later for free." },
 
             // Ayarlar
