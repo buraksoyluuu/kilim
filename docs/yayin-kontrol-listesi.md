@@ -10,10 +10,16 @@ Sahip: **[S]** = Burak (hesap/onay), **[G]** = geliştirici/Claude. Sıra öneml
 - [ ] AB Dijital Hizmetler Yasası (DSA) satıcı (trader) beyanı [S] — "trader" seçilirse adres/telefon AB mağazasında herkese açık görünür.
 - [ ] **Google Play Console** (tek seferlik 25 $; yeni kişisel hesaplarda yayından önce 12 test kullanıcısıyla 14 gün kapalı test zorunluluğu var — şirket hesabı önerilir).
 - [x] **Firebase projesi** `kilim-game` (proje no 114466984555): Anonymous Auth açık, Firestore `europe-west1` üretim modu, web istemci anahtarı `Resources/backend.json`'da.
-- [x] Backend yayında: `https://kilim-api.kilimgame.workers.dev` (Cloudflare Workers + D1 `kilim`, ücretsiz). Firebase yalnızca anonim kimlik (Spark). Deploy: Actions › Deploy backend. `CLOUDFLARE_API_TOKEN` 2 Aralık 2026'da dolar → yenile [S].
+- [x] Backend yayında: `https://kilim-api.kilimgame.workers.dev` (Cloudflare Workers + D1 `kilim`, ücretsiz). Firebase yalnızca anonim kimlik (Spark). Deploy: Actions › Deploy backend. `CLOUDFLARE_API_TOKEN` süresi: Cloudflare › API Tokens › kilim-deploy-claude › Edit › **No expiration** [S].
 - [ ] Mağaza hesapları hazır olunca Worker gizli değerleri: `APPLE_PRIVATE_KEY`, `APPLE_KEY_ID`, `APPLE_ISSUER_ID`, `GOOGLE_SERVICE_ACCOUNT`, `RTDN_TOKEN` [G]. O zamana kadar satın alma doğrulaması atlanır.
 - [ ] **AdMob hesabı** → iOS ve Android uygulama + 2 reklam birimi (ödüllü, tam ekran). Mediation: ilk etapta AdMob + 2–3 ağ (ör. AppLovin, Unity Ads, Meta).
 - [ ] Ödeme/vergi profilleri: App Store Connect › Agreements, Tax, Banking; Play Console › Payments profile.
+
+## A2. Test dağıtımı (kalıcı) — Actions › **Beta build** › Run workflow
+- [x] Unity CI lisansı: `UNITY_LICENSE`, `UNITY_EMAIL`, `UNITY_PASSWORD`.
+- [x] iOS: `APPSTORE_P8` (Kilim CI anahtarı) → TestFlight; dahili grup **Ekip** (otomatik dağıtım açık).
+- [ ] `APPLE_DIST_CERT` + `ANDROID_SIGNING` secret'ları [S]: Actions › **Setup signing (bir kez)** çalıştırmasının `signing-secrets` artifact'ındaki .txt dosyaları (ad = secret adı, içerik = değer). **Android anahtarı Play'e yüklendikten sonra asla değişmemeli; yedeğini şifre yöneticisinde sakla.**
+- [ ] Google Play: Console'da uygulamayı oluştur → ilk AAB'yi elle internal teste yükle → servis hesabı JSON'unu `GOOGLE_PLAY_JSON` secret'ına ekle [S]. Sonraki build'ler Play internal teste kendiliğinden gider.
 
 ## B. Mağaza ürünleri [S] (ID'ler kodla birebir aynı olmalı — `Core/Runtime/Config.cs › Skus`)
 | Ürün ID | Tür (Apple / Google) | Fiyat (USD taban) |
