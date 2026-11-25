@@ -43,9 +43,9 @@ jobs:
           unityVersion: 6000.0.30f1
           targetPlatform: Android
           buildMethod: Kilim.EditorTools.BuildScript.BuildFromCommandLine
-          customParameters: -customBuildPath build/Android/Kilim.apk
+          buildName: Kilim
       - uses: actions/upload-artifact@v4
-        with: { name: kilim-android-apk, path: Unity/Kilim/build/Android/*.apk, retention-days: 14 }
+        with: { name: kilim-android-apk, path: build/Android/*.apk, retention-days: 14 }
 
   ios:
     needs: tests
@@ -69,9 +69,9 @@ jobs:
           unityVersion: 6000.0.30f1
           targetPlatform: iOS
           buildMethod: Kilim.EditorTools.BuildScript.BuildFromCommandLine
-          customParameters: -customBuildPath build/iOS/Kilim
+          buildName: Kilim
       - uses: actions/upload-artifact@v4
-        with: { name: ios-xcode, path: Unity/Kilim/build/iOS, retention-days: 3 }
+        with: { name: ios-xcode, path: build/iOS, retention-days: 3 }
 
   testflight:
     needs: ios
