@@ -18,7 +18,12 @@ namespace Kilim.Game
         public static readonly Color Neutral = Hex("E8DFD1");
         public static readonly Color BoardBg = Hex("5B4636");
         public static readonly Color CellEmpty = Hex("EADFCB");
-        public static readonly Color Dim = new Color(0, 0, 0, 0.55f);
+        public static readonly Color Dim = new Color(0.12f, 0.08f, 0.06f, 0.62f);
+        public static readonly Color Cream = Hex("FFF8EC");
+        public static readonly Color Sand = Hex("F1E4CC");
+
+        /// <summary>Rengin koyu tonu (buton gölgesi, basılı hâl).</summary>
+        public static Color Darker(Color c, float k = 0.72f) => new Color(c.r * k, c.g * k, c.b * k, c.a);
 
         public static Color Motif(string code)
         {
@@ -58,8 +63,10 @@ namespace Kilim.Game
     /// <summary>Koddan uGUI kurma yardımcıları. Tüm ekranlar bunlarla kurulur; sahne/prefab gerekmez.</summary>
     public static class Ui
     {
-        private static Font _font;
-        public static Font Font => _font != null ? _font : (_font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+        private static Font _font, _bold;
+        /// <summary>Kilim Sans (Poppins + semboller, Resources/fonts). Yoksa Unity'nin varsayılanı.</summary>
+        public static Font Font => _font != null ? _font : (_font = Resources.Load<Font>("fonts/KilimSans-Medium") ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
+        public static Font Bold => _bold != null ? _bold : (_bold = Resources.Load<Font>("fonts/KilimSans-Bold") ?? Font);
 
         public static RectTransform Rect(Transform parent, string name)
         {
@@ -132,12 +139,15 @@ namespace Kilim.Game
         {
             var rt = Rect(parent, "Text");
             var t = rt.gameObject.AddComponent<Text>();
-            t.font = Font;
+            var boldFont = Bold;
+            t.font = bold ? boldFont : Font;
             t.text = Loc.T(text);
             t.fontSize = size;
             t.color = color ?? Theme.Ink;
             t.alignment = align;
-            t.fontStyle = bold ? FontStyle.Bold : FontStyle.Normal;
+            // Kalın font dosyası varsa sentetik kalın kullanılmaz (daha temiz kenar).
+            t.fontStyle = bold && boldFont == Font ? FontStyle.Bold : FontStyle.Normal;
+            t.lineSpacing = 0.92f;
             t.horizontalOverflow = HorizontalWrapMode.Wrap;
             t.verticalOverflow = VerticalWrapMode.Overflow;
             t.raycastTarget = false;
@@ -146,16 +156,78 @@ namespace Kilim.Game
             return t;
         }
 
+        /// <summary>
+        /// Kabartmalı buton: alt kenarda koyu gölge (3B his), basınca küçülür (PressFx), tıklama sesi + hafif titreşim.
+        /// </summary>
         public static Button Button(Transform parent, string text, Action onClick, Color? bg = null,
                                     Color? fg = null, float h = 130, int fontSize = 44, float w = -1)
         {
-            var img = Box(parent, "Button:" + text, bg ?? Theme.Primary, w, h);
+            var color = bg ?? Theme.Primary;
+            var img = Box(parent, "Button:" + text, color, w, h);
             var btn = img.gameObject.AddComponent<Button>();
             btn.targetGraphic = img;
+            var colors = btn.colors;
+            colors.pressedColor = new Color(0.88f, 0.88f, 0.88f, 1);
+            colors.highlightedColor = Color.white;
+            colors.selectedColor = Color.white;
+            colors.disabledColor = new Color(1, 1, 1, 0.55f);
+            colors.fadeDuration = 0.06f;
+            btn.colors = colors;
+            Depth(img, color);
+            img.gameObject.AddComponent<PressFx>();
             var label = Label(img.transform, text, fontSize, fg ?? Color.white, TextAnchor.MiddleCenter, true);
-            ((RectTransform)label.transform).Stretch(16, 0, 16, 0);
+            ((RectTransform)label.transform).Stretch(16, 0, 16, 6);
             btn.onClick.AddListener(() => { Audio.Click(); onClick?.Invoke(); });
             return btn;
+        }
+
+        /// <summary>Alt kenar gölgesi: rengin koyu tonu 8 px aşağıda (kabartma hissi).</summary>
+        public static Shadow Depth(Graphic g, Color baseColor, float dist = 9)
+        {
+            var sh = g.gameObject.AddComponent<Shadow>();
+            sh.effectColor = baseColor.a < 0.5f ? new Color(0, 0, 0, 0.08f) : Theme.WithAlpha(Theme.Darker(baseColor, 0.7f), 0.9f);
+            sh.effectDistance = new Vector2(0, -dist);
+            return sh;
+        }
+
+        /// <summary>Yumuşak kart gölgesi.</summary>
+        public static void Soft(Graphic g, float dist = 10)
+        {
+            var sh = g.gameObject.AddComponent<Shadow>();
+            sh.effectColor = new Color(0.35f, 0.22f, 0.12f, 0.16f);
+            sh.effectDistance = new Vector2(0, -dist);
+        }
+
+        /// <summary>Simge + metin hap (coin, ilmek, kalan parça).</summary>
+        public static Text Pill(Transform parent, Sprite icon, string text, float w = 230, float h = 86, Color? bg = null)
+        {
+            var pill = Box(parent, "Pill", bg ?? Theme.Panel, w, h);
+            Round(pill, 1f, Art.Pill);
+            Soft(pill, 6);
+            var ic = Icon(pill.transform, icon, h - 22);
+            var irt = (RectTransform)ic.transform;
+            irt.anchorMin = irt.anchorMax = new Vector2(0, 0.5f);
+            irt.pivot = new Vector2(0, 0.5f);
+            irt.sizeDelta = new Vector2(h - 22, h - 22);
+            irt.anchoredPosition = new Vector2(10, 0);
+            var t = Label(pill.transform, text, (int)(h * 0.46f), Theme.Ink, TextAnchor.MiddleCenter, true);
+            ((RectTransform)t.transform).Stretch(h - 8, 0, 14, 0);
+            return t;
+        }
+
+        /// <summary>Küçük sayaç rozeti (sağ üst köşe).</summary>
+        public static Text Badge(Transform parent, string text, Color? bg = null)
+        {
+            var b = Box(parent, "Badge", bg ?? Theme.Primary);
+            Round(b, 1f, Art.Pill);
+            var rt = (RectTransform)b.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(0.75f, 0.75f);
+            rt.sizeDelta = new Vector2(70, 52);
+            b.raycastTarget = false;
+            var t = Label(b.transform, text, 30, Color.white, TextAnchor.MiddleCenter, true);
+            ((RectTransform)t.transform).Stretch();
+            return t;
         }
 
         public static Text ButtonLabel(Button b) => b.GetComponentInChildren<Text>();
@@ -164,7 +236,9 @@ namespace Kilim.Game
         {
             b.interactable = on;
             var c = b.targetGraphic.color;
-            b.targetGraphic.color = new Color(c.r, c.g, c.b, on ? 1f : 0.4f);
+            b.targetGraphic.color = new Color(c.r, c.g, c.b, on ? 1f : 0.45f);
+            var label = b.GetComponentInChildren<Text>();
+            if (label != null) { var lc = label.color; label.color = new Color(lc.r, lc.g, lc.b, on ? 1f : 0.6f); }
         }
 
         public static LayoutElement Size(GameObject go, float w, float h, float flexW = -1, float flexH = -1)
@@ -214,6 +288,8 @@ namespace Kilim.Game
             var rt = VStack(parent, spacing, pad, TextAnchor.UpperCenter, "Card");
             var img = rt.gameObject.AddComponent<Image>();
             img.color = bg ?? Theme.Panel;
+            Round(img, 1.2f);
+            Soft(img);
             return rt;
         }
 
@@ -247,7 +323,7 @@ namespace Kilim.Game
             var bar = HStack(parent, 16, 24, TextAnchor.MiddleLeft, 150, "Header");
             var g = bar.GetComponent<HorizontalLayoutGroup>();
             g.childForceExpandWidth = false;
-            if (onBack != null) Button(bar, "‹", onBack, Theme.Neutral, Theme.Ink, 100, 64, 100);
+            if (onBack != null) Button(bar, "‹", onBack, Theme.Panel, Theme.Ink, 100, 72, 100);
             var t = Label(bar, title, 52, Theme.Ink, TextAnchor.MiddleLeft, true);
             Size(t.gameObject, -1, 100, 1);
             if (app != null) CoinPill(bar, app);
@@ -256,20 +332,37 @@ namespace Kilim.Game
 
         public static Text CoinPill(Transform parent, App app)
         {
-            var pill = Box(parent, "Coins", Theme.Neutral, 270, 90);
-            Round(pill, 1f, Art.Pill);
-            var icon = Icon(pill.transform, Art.Coin, 64);
-            var irt = (RectTransform)icon.transform;
-            irt.anchorMin = irt.anchorMax = new Vector2(0, 0.5f);
-            irt.pivot = new Vector2(0, 0.5f);
-            irt.sizeDelta = new Vector2(64, 64);
-            irt.anchoredPosition = new Vector2(14, 0);
-            var t = Label(pill.transform, "", 40, Theme.Ink, TextAnchor.MiddleCenter, true);
-            ((RectTransform)t.transform).Stretch(70, 0, 10, 0);
-            void Refresh() { if (t != null) t.text = Fmt.N(app.Meta.Wallet.Coins); }
-            Refresh();
+            var t = Pill(parent, Art.Coin, Fmt.N(app.Meta.Wallet.Coins), 260, 86);
+            int shown = app.Meta.Wallet.Coins;
+            void Refresh()
+            {
+                if (t == null) return;
+                int now = app.Meta.Wallet.Coins;
+                if (now == shown) return;
+                Fx.Count(t, shown, now, 0.6f, Fmt.N);
+                Fx.Pop(t.transform.parent, 1.08f);
+                shown = now;
+            }
             app.Meta.Wallet.Changed += Refresh;
-            pill.gameObject.AddComponent<OnDestroyHook>().Action = () => app.Meta.Wallet.Changed -= Refresh;
+            t.gameObject.AddComponent<OnDestroyHook>().Action = () => app.Meta.Wallet.Changed -= Refresh;
+            return t;
+        }
+
+        public static Text IlmekPill(Transform parent, App app)
+        {
+            var t = Pill(parent, Art.Ilmek, app.Meta.Wallet.Ilmek.ToString(), 190, 86);
+            int shown = app.Meta.Wallet.Ilmek;
+            void Refresh()
+            {
+                if (t == null) return;
+                int now = app.Meta.Wallet.Ilmek;
+                if (now == shown) return;
+                Fx.Count(t, shown, now, 0.5f, v => v.ToString());
+                Fx.Pop(t.transform.parent, 1.1f);
+                shown = now;
+            }
+            app.Meta.Wallet.Changed += Refresh;
+            t.gameObject.AddComponent<OnDestroyHook>().Action = () => app.Meta.Wallet.Changed -= Refresh;
             return t;
         }
 
@@ -288,13 +381,23 @@ namespace Kilim.Game
         public static Action<float> Bar(Transform parent, float h, Color fill, Color bg)
         {
             var back = Box(parent, "Bar", bg, -1, h);
+            Round(back, 1f, Art.Pill);
             var f = Box(back.transform, "Fill", fill);
+            Round(f, 1f, Art.Pill);
             var frt = (RectTransform)f.transform;
             frt.anchorMin = Vector2.zero;
             frt.anchorMax = new Vector2(0, 1);
             frt.offsetMin = Vector2.zero;
             frt.offsetMax = Vector2.zero;
-            return v => { if (frt != null) frt.anchorMax = new Vector2(Mathf.Clamp01(v), 1); };
+            float shown = 0;
+            return v =>
+            {
+                if (frt == null) return;
+                float from = shown, to = Mathf.Clamp01(v);
+                shown = to;
+                // İnce doluluk: hücre kadar kısa çubuk görünmesin diye en az yükseklik kadar genişlik.
+                Fx.To(frt, 0.45f, Ease.OutCubic, k => frt.anchorMax = new Vector2(Mathf.Lerp(from, to, k), 1), null, 0, "bar");
+            };
         }
     }
 

@@ -56,6 +56,10 @@ namespace Kilim.Game
             s.Root = root;
             Current = s;
             s.Build(root);
+            // Geçiş: yeni ekran hafifçe aşağıdan kayarak ve belirerek gelir.
+            var g = root.gameObject.AddComponent<CanvasGroup>();
+            Fx.Fade(g, 0, 1, 0.22f);
+            Fx.To(root, 0.32f, Ease.OutCubic, k => { if (root != null) { root.offsetMin = new Vector2(0, -60 * (1 - k)); root.offsetMax = new Vector2(0, -60 * (1 - k)); } }, null, 0, "enter");
         }
 
         internal void Tick()
@@ -80,13 +84,19 @@ namespace Kilim.Game
                 ((RectTransform)catcher.transform).Stretch();
                 catcher.gameObject.AddComponent<Button>().onClick.AddListener(() => Close(dim));
             }
-            var card = Ui.Card(dim, 28, 48);
+            var card = Ui.Card(dim, 28, 52);
             card.anchorMin = new Vector2(0.06f, 0.5f);
             card.anchorMax = new Vector2(0.94f, 0.5f);
             card.pivot = new Vector2(0.5f, 0.5f);
             card.anchoredPosition = Vector2.zero;
+            card.GetComponent<Image>().color = Theme.Cream;
             var fit = card.gameObject.AddComponent<ContentSizeFitter>();
             fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            // Açılış: karartma belirir, kart esneyerek büyür.
+            var dg = dim.gameObject.AddComponent<CanvasGroup>();
+            Fx.Fade(dg, 0, 1, 0.18f);
+            card.localScale = new Vector3(0.86f, 0.86f, 1);
+            Fx.Scale(card, 0.86f, 1f, 0.34f, Ease.OutBack);
             return card;
         }
 
@@ -132,15 +142,20 @@ namespace Kilim.Game
 
         public void Toast(string text, float seconds = 2.2f)
         {
-            var box = Ui.Box(_toastLayer, "Toast", new Color(0.17f, 0.14f, 0.12f, 0.92f));
+            Ui.Clear(_toastLayer); // üst üste binmesin
+            var box = Ui.Box(_toastLayer, "Toast", new Color(0.17f, 0.12f, 0.09f, 0.94f));
             var rt = (RectTransform)box.transform;
-            rt.anchorMin = new Vector2(0.08f, 0.1f);
-            rt.anchorMax = new Vector2(0.92f, 0.1f);
+            rt.anchorMin = new Vector2(0.08f, 0.12f);
+            rt.anchorMax = new Vector2(0.92f, 0.12f);
             rt.sizeDelta = new Vector2(0, 130);
             box.raycastTarget = false;
+            Ui.Soft(box, 8);
             var t = Ui.Label(box.transform, text, 36, Color.white);
-            ((RectTransform)t.transform).Stretch(24, 0, 24, 0);
-            _app.Delay(seconds, () => { if (box != null) UnityEngine.Object.Destroy(box.gameObject); });
+            ((RectTransform)t.transform).Stretch(28, 0, 28, 0);
+            var g = box.gameObject.AddComponent<CanvasGroup>();
+            Fx.Fade(g, 0, 1, 0.18f);
+            Fx.Move(rt, new Vector2(0, -60), Vector2.zero, 0.3f, Ease.OutBack);
+            Fx.To(g, 0.25f, Ease.OutQuad, k => g.alpha = 1 - k, () => { if (box != null) UnityEngine.Object.Destroy(box.gameObject); }, seconds, "out");
         }
     }
 

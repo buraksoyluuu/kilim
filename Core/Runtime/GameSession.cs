@@ -99,10 +99,15 @@ namespace Kilim.Core
             }
         }
 
-        public bool CanUndo => State == SessionState.Playing && _lastActionWasPlacement && _history.Count > 0;
-        public bool CanSwap(int slot) => State == SessionState.Playing && _pending.Count > 0
-                                         && IsQueueSlot(slot) && _tray[slot] != null;
-        public bool CanAddSingleStitch => State == SessionState.Playing && FirstFreeBonusSlot() >= 0;
+        // Güçlendiriciler "Tezgâh doldu" durumunda da kullanılabilir (kurtarma): başarılı olursa oyun kaldığı yerden sürer.
+        private bool Live => State != SessionState.Won;
+        public bool CanUndo => Live && _lastActionWasPlacement && _history.Count > 0;
+        public bool CanSwap(int slot) => Live && _pending.Count > 0 && IsQueueSlot(slot) && _tray[slot] != null;
+        public bool CanAddSingleStitch => Live && FirstFreeBonusSlot() >= 0 && !Board.IsFull;
+
+        /// <summary>Kayıp anında en az bir güçlendirici durumu kurtarabilir mi (Geri Al, Değiştir ya da Tek İlmek).</summary>
+        public bool HasRescue => State == SessionState.Failed &&
+                                 (CanUndo || CanAddSingleStitch || Enumerable.Range(0, TraySlots).Any(CanSwap));
 
         // ---------- Oyuncu eylemleri ----------
 
@@ -162,6 +167,7 @@ namespace Kilim.Core
             PlacementCount--;
             _lastActionWasPlacement = _history.Count > 0;
             if (m.Piece.IsSingleStitch) UsedSingleStitch = _history.Any(h => h.Piece.IsSingleStitch);
+            Revive();
             return true;
         }
 
@@ -173,6 +179,8 @@ namespace Kilim.Core
             _pending.Add(p.QueueIndex);
             _tray[slot] = DrawNext();
             _lastActionWasPlacement = false;
+            Revive();
+            EvaluateFail();
             return true;
         }
 
@@ -180,9 +188,10 @@ namespace Kilim.Core
         public bool AddSingleStitch()
         {
             int s = FirstFreeBonusSlot();
-            if (State != SessionState.Playing || s < 0) return false;
+            if (!CanAddSingleStitch) return false;
             _tray[s] = new TrayPiece(-1, Shape.Single(), "");
             _lastActionWasPlacement = false;
+            Revive();
             EvaluateFail();
             return true;
         }
@@ -199,6 +208,12 @@ namespace Kilim.Core
         }
 
         // ---------- İç ----------
+
+        /// <summary>Kurtarma: kayıptayken güçlendirici uygulandıysa oyun sürer (kayıp kontrolü yeniden yapılır).</summary>
+        private void Revive()
+        {
+            if (State == SessionState.Failed) SetState(SessionState.Playing);
+        }
 
         private TrayPiece DrawNext()
         {

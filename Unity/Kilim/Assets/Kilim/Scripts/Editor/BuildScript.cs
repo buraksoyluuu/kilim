@@ -32,7 +32,7 @@ namespace Kilim.EditorTools
             PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, BundleId);
             PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.iOS, BundleId);
             var version = Environment.GetEnvironmentVariable("KILIM_VERSION");
-            PlayerSettings.bundleVersion = string.IsNullOrEmpty(version) ? "0.4.0" : version;
+            PlayerSettings.bundleVersion = string.IsNullOrEmpty(version) ? "0.5.0" : version;
             int build = int.TryParse(Environment.GetEnvironmentVariable("KILIM_BUILD"), out var b) ? b : 1;
             PlayerSettings.Android.bundleVersionCode = build;
             PlayerSettings.iOS.buildNumber = build.ToString();

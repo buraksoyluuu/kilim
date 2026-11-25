@@ -34,6 +34,12 @@ namespace Kilim.Core
 
         // Ayarlar
         public bool Music = true, Sfx = true, Haptics = true, LeftHanded, DailyNotification;
+        /// <summary>Kolay mod: desen ipucu her bölümde tahtada (HintPolicy).</summary>
+        public bool EasyMode;
+        /// <summary>Tanıtım hikâyesi görüldü.</summary>
+        public bool IntroSeen;
+        /// <summary>Açılan mekânların giriş kartı gösterildi (House.Id).</summary>
+        public readonly HashSet<string> HousesIntroduced = new HashSet<string>();
         public string Language = "tr";
 
         // Reklam ve satın alma
@@ -102,6 +108,7 @@ namespace Kilim.Core
                 { "undoGift", FreeUndoGiftGiven.Cast<object>().ToList() }, { "consecFails", ConsecutiveFails },
                 { "music", Music }, { "sfx", Sfx }, { "haptics", Haptics }, { "leftHanded", LeftHanded },
                 { "dailyNotif", DailyNotification }, { "lang", Language },
+                { "easy", EasyMode }, { "intro", IntroSeen }, { "housesIntro", HousesIntroduced.Cast<object>().ToList() },
                 { "noAds", NoAds }, { "noAdsUntil", NoAdsUntilMs }, { "lastPurchase", LastPurchaseMs },
                 { "lastInter", LastInterstitialMs }, { "levelsSinceInter", LevelsSinceInterstitial },
                 { "interCount", InterstitialCount }, { "noAdsOfferShown", NoAdsOfferShown },
@@ -151,6 +158,7 @@ namespace Kilim.Core
                 Music = Data.Bool(d, "music", true), Sfx = Data.Bool(d, "sfx", true),
                 Haptics = Data.Bool(d, "haptics", true), LeftHanded = Data.Bool(d, "leftHanded"),
                 DailyNotification = Data.Bool(d, "dailyNotif"), Language = Data.Str(d, "lang", "tr"),
+                EasyMode = Data.Bool(d, "easy"), IntroSeen = Data.Bool(d, "intro"),
                 NoAds = Data.Bool(d, "noAds"), NoAdsUntilMs = Data.Long(d, "noAdsUntil"),
                 LastPurchaseMs = Data.Long(d, "lastPurchase"), LastInterstitialMs = Data.Long(d, "lastInter"),
                 LevelsSinceInterstitial = Data.Int(d, "levelsSinceInter"), InterstitialCount = Data.Int(d, "interCount"),
@@ -178,6 +186,7 @@ namespace Kilim.Core
             AddStrs(p.StreakBadges, Data.List(d, "badges"));
             AddStrs(p.HomeTasksDone, Data.List(d, "homeDone"));
             AddStrs(p.Cosmetics, Data.List(d, "cosmetics"));
+            AddStrs(p.HousesIntroduced, Data.List(d, "housesIntro"));
             return p;
         }
 

@@ -1,4 +1,4 @@
-# Kilim – Test rehberi (v0.3)
+# Kilim – Test rehberi (v0.5)
 
 UAT listesi: https://claude.ai/artifact/Y4ZR74bJBTsPMHKu2u8dUR
 
@@ -9,6 +9,18 @@ UAT listesi: https://claude.ai/artifact/Y4ZR74bJBTsPMHKu2u8dUR
 4. Game penceresinde çözünürlüğü dikey seç (ör. 1080×1920 veya iPhone 15).
 
 Kaydı sıfırlamak için: Ayarlar › Verilerimi sil, ya da `Application.persistentDataPath/kilim_save.json` dosyasını sil.
+
+## 2a. v0.5 — oyuncu geri bildirimi turu
+| Alan | Değişiklik | Nasıl test edilir |
+|---|---|---|
+| Kayıp (H1, H2) | "Tezgâh doldu" kartı: önce elindeki güçlendiriciyle **kurtar** (internetsiz çalışır), sonra devam paketi, en altta her zaman **Yeniden başla / Ana menü**. Parçalar bitip boşluk kalırsa Tek İlmek'le tamamlanır. | Uçak modunda bir bölümü kilitle; kart açılmalı, Tek İlmek ile devam edebilmelisin. |
+| Değiştir (H3) | Değiştir modunda yuvalar parlar, buton "Vazgeç" olur; değişen parça zıplayarak gelir. | Değiştir'e bas, parçaya dokun, kuyruğun sonuna gitmeli. |
+| İçerik (H4) | 4 mekân × 20 görev: Nine'nin Evi → Bağ Evi → Yayla Evi → Kasaba Konağı. Her alanın eski/yeni görseli; görev yaptıkça renklenir. | Ev ekranında alan sekmeleri, görev sonrası renk geçişi ve konfeti. |
+| Arayüz (H5) | Yıldız eşikleri çubuğun altında; kilitli güçlendiricide kilit + "Bölüm 6'da". Yeni font (Kilim Sans), kabartmalı butonlar, basma hissi, titreşim. | Bölüm 4 başlığı ile işaretler çakışmamalı. |
+| Animasyon | Ekran geçişleri, tahta açılış dalgası, yerleşimde hücre zıplaması, eşleşmede altın parlama + "+N", ardışık tam eşleşmede övgü, yıldız eşiği kutlaması, kazanınca dokuma dalgası + konfeti, yıldızlar uçarak gelir, coin sayar. | |
+| Tekrar oyna | Kazandın ekranında **Sonraki bölüm / Tekrar oyna / Ana menü**; **Harita**'dan her bitmiş bölüm tekrar oynanır (coin yarı, ilmek yalnızca yeni yıldız). | |
+| Zorluk | 1–8 tam ipucu, 9–24 yalnızca şekil, 25+ boş tahta + desen kartı (sağ üst, dokununca büyür). Ayarlar › **Kolay mod** ipucunu hep açar. | Bölüm 9'da "Usta dokumacı" kartı çıkmalı. |
+| Tanıtım | İlk açılışta 4 sayfalık hikâye (Ayarlar'dan yeniden izlenir); yaş seçimi kaydırmasız (on yıl → yıl). | Uygulamayı silip yeniden kur. |
 
 ## 2. Bu sürümde ne var
 | Alan | Durum |

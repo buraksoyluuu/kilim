@@ -33,6 +33,13 @@ namespace Kilim.Game
         public static Sprite Nine => Get("nine");
         public static Sprite Pattern => Get("pattern_bg");
         public static Sprite Band => Get("band");
+        public static Sprite Bubble => Get("bubble", 48);
+
+        /// <summary>Arayüz simgesi (beyaz, çalışma anında renklendirilir): Resources/art/icon_{name}.png.</summary>
+        public static Sprite Icon(string name) => Get("icon_" + name);
+
+        /// <summary>Ev alanı illüstrasyonu: eski (bakımsız) ya da yeni (onarılmış) hâli.</summary>
+        public static Sprite Area(string key, bool restored) => Get($"area_{key}_{(restored ? "new" : "old")}");
 
         /// <summary>Renk körlüğü için her motif renginin şekli (UAT A11Y-01).</summary>
         public static Sprite Motif(string code)
@@ -97,12 +104,7 @@ namespace Kilim.Game
 
         public static void Click() => Play("click", 0.6f);
 
-        public static void Place(bool matched)
-        {
-            Play(matched ? "match" : "place");
-#if UNITY_ANDROID || UNITY_IOS
-            if (Haptics) Handheld.Vibrate();
-#endif
-        }
+        /// <summary>Yerleşim sesi (titreşim Haptic sınıfında, kısa ve hafif).</summary>
+        public static void Place(bool matched) => Play(matched ? "match" : "place");
     }
 }

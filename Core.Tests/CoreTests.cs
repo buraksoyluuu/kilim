@@ -278,22 +278,52 @@ namespace Kilim.Core.Tests
         }
 
         [Test("BST-05, FAIL-04")]
-        public static void SingleStitchAfterContinue()
+        public static void SingleStitchRescuesFromFail()
         {
             var s = new GameSession(ThreeByThree());
             s.Place(0, new Cell(0, 1));
             s.Place(2, new Cell(2, 0));
             Assert.Equal(SessionState.Failed, s.State);
-            Assert.False(s.AddSingleStitch(), "kayıpta güçlendirici yok");
-            Assert.True(s.ContinueAfterFail());
-            Assert.True(s.AddSingleStitch());
+            Assert.True(s.HasRescue, "Tek İlmek kurtarabilir");
+            Assert.True(s.AddSingleStitch(), "kayıpta kurtarma");
+            Assert.Equal(SessionState.Playing, s.State, "oyun sürer");
             int bonus = GameSession.TraySlots;
             Assert.True(s.Tray[bonus].IsSingleStitch);
             Assert.True(s.Place(bonus, new Cell(2, 2)).Success);
             Assert.True(s.UsedSingleStitch);
-            // Boş: (0,0),(1,0) → I3 yine sığmaz → ikinci kayıp (devam merdiveni 2. basamak)
+            // Boş: (0,0),(1,0) → I3 yine sığmaz → ikinci kayıp
             Assert.Equal(SessionState.Failed, s.State);
             Assert.Equal(2, s.FailCount);
+        }
+
+        [Test("FAIL-05")]
+        public static void UndoRescuesFromFail()
+        {
+            var s = new GameSession(ThreeByThree());
+            s.Place(0, new Cell(0, 1));
+            s.Place(2, new Cell(2, 0));
+            Assert.Equal(SessionState.Failed, s.State);
+            Assert.True(s.Undo(), "kayıpta geri al");
+            Assert.Equal(SessionState.Playing, s.State);
+            Assert.Equal(1, s.PlacementCount);
+        }
+
+        [Test("FAIL-06")]
+        public static void LastHolesCanBeFilledWithSingleStitch()
+        {
+            // Hiçbir parça sığmıyor; Tek İlmek'lerle boşluklar tek tek kapatılıp bölüm bitirilebilir.
+            var s = new GameSession(ThreeByThree());
+            s.Place(0, new Cell(0, 1));
+            s.Place(2, new Cell(2, 0));
+            int bonus = GameSession.TraySlots;
+            foreach (var hole in new[] { new Cell(0, 0), new Cell(1, 0), new Cell(2, 2) })
+            {
+                Assert.Equal(SessionState.Failed, s.State);
+                Assert.True(s.AddSingleStitch());
+                Assert.True(s.Place(bonus, hole).Success);
+            }
+            Assert.Equal(SessionState.Won, s.State);
+            Assert.False(s.CanAddSingleStitch, "tahta dolu");
         }
 
         [Test("BST-06, STAR-05")]

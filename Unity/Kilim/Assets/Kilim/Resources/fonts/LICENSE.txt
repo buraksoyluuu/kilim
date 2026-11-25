@@ -1,0 +1,10 @@
+KilimSans-Medium.ttf / KilimSans-Bold.ttf
+
+Base: Poppins (Medium, Bold) — Copyright 2020 The Poppins Project Authors
+(https://github.com/itfoundry/Poppins). Licensed under the SIL Open Font License, Version 1.1
+(https://openfontlicense.org). Renamed "Kilim Sans" as a Modified Version per OFL §3.
+
+Symbol glyphs (★ ☆ ✦ ● ■ ▲ ◆ ✚ ⚑ ✓ ✕ ↻ ▶ ♥) merged from DejaVu Sans / DejaVu Sans Bold —
+Bitstream Vera / DejaVu fonts license (permissive, https://dejavu-fonts.github.io/License.html).
+
+The merged fonts are distributed under the SIL Open Font License 1.1. Build: Tools/build_font.py.

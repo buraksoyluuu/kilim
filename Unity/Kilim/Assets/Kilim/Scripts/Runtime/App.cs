@@ -208,29 +208,28 @@ namespace Kilim.Game
             });
         }
 
-        /// <summary>Kazandın → Ana geçişi; kural uygunsa tam ekran reklam (UAT ADS-01..09).</summary>
-        public void LeaveWinToHome(int levelWon)
+        /// <summary>Kazandın ekranından çıkış (sonraki bölüm, tekrar, ana menü); kural uygunsa önce tam ekran reklam (UAT ADS-01..09).</summary>
+        public void LeaveWin(int levelWon, Action then)
         {
             var block = Meta.Ads.CanShowInterstitial(Profile, levelWon, cameFromFail: false);
-            if (block == InterstitialBlock.None)
+            if (block != InterstitialBlock.None) { then?.Invoke(); return; }
+            Ads.ShowInterstitial("win_exit", () =>
             {
-                Ads.ShowInterstitial("win_to_home", () =>
+                Meta.Ads.OnInterstitialShown(Profile);
+                Analytics.Track("ad_interstitial", ("placement", "win_exit"), ("result", "shown"));
+                Save();
+                then?.Invoke();
+                if (Meta.Ads.ShouldOfferNoAds(Profile))
                 {
-                    Meta.Ads.OnInterstitialShown(Profile);
-                    Analytics.Track("ad_interstitial", ("placement", "win_to_home"), ("result", "shown"));
+                    Profile.NoAdsOfferShown = true;
                     Save();
-                    GoHome();
-                    if (Meta.Ads.ShouldOfferNoAds(Profile))
-                    {
-                        Profile.NoAdsOfferShown = true;
-                        Save();
-                        Nav.Confirm("Reklamsız oyna", "Tam ekran reklamları kalıcı olarak kapat. Ödüllü reklamlar isteğe bağlı kalır.",
-                            $"Reklamsız · {Iap.LocalizedPrice(Skus.NoAds)}", () => Buy(Skus.NoAds, "noads_offer"), "Şimdi değil", null);
-                    }
-                });
-            }
-            else GoHome();
+                    Nav.Confirm("Reklamsız oyna", "Tam ekran reklamları kalıcı olarak kapat. Ödüllü reklamlar isteğe bağlı kalır.",
+                        $"Reklamsız · {Iap.LocalizedPrice(Skus.NoAds)}", () => Buy(Skus.NoAds, "noads_offer"), "Şimdi değil", null);
+                }
+            });
         }
+
+        public void LeaveWinToHome(int levelWon) => LeaveWin(levelWon, GoHome);
 
         // ---------------------------------------------------------------
         // Satın alma

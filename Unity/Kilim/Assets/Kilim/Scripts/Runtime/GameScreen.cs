@@ -7,19 +7,23 @@ using UnityEngine.UI;
 namespace Kilim.Game
 {
     /// <summary>
-    /// 2 · Oyun ekranı (Spec 1 §1–§5, Spec 3 §1 ekran 2 ve 9). Üst: duraklat, bölüm, desen çubuğu, kalan parça.
-    /// Orta: tahta. Alt: 4'lü tezgâh (+ Tek İlmek yuvaları) ve güçlendiriciler.
+    /// 2 · Oyun ekranı (Spec 1 §1–§5, Spec 3 §1 ekran 2 ve 9). Üst: duraklat, bölüm, desen çubuğu (yıldız eşikleri
+    /// çubuğun altında), desen kartı. Orta: tahta. Alt: kalan parça, 4'lü tezgâh (+ Tek İlmek yuvaları), güçlendiriciler.
+    /// His: yerleşen hücreler zıplar, eşleşenler altın parlar, yıldız eşiği geçilince kutlama, geçersiz bırakmada titreme.
     /// </summary>
     public sealed class GameScreen : UiScreen
     {
         public const float BoardSize = 1000f;
-        public const float BoardPad = 10f;
+        public const float BoardPad = 12f;
         public const float CellGap = 6f;
         public const float DragLift = 180f;
+
+        private static readonly string[] Praise = { "Güzel!", "Harika!", "Muhteşem!", "Usta işi!" };
 
         private readonly LevelRun _run;
         private GameSession S => _run.Session;
         private LevelData L => _run.Level;
+        private HintLevel _hint;
 
         private RectTransform _board;
         private Image[,] _cells;
@@ -31,35 +35,42 @@ namespace Kilim.Game
 
         private RectTransform _trayRow, _bonusRow;
         private readonly List<TraySlotView> _slots = new List<TraySlotView>();
-        private Text _remaining, _percent;
+        private Text _remaining, _percent, _star2, _star3;
         private System.Action<float> _bar;
         private RectTransform _boosterRow;
-        private Text _hint;
+        private Text _hintText;
         private bool _swapMode;
         private bool _ending;
+        private int _streak;
+        private int _starsShown = 1;
         private BoosterService _boosters;
 
         public GameScreen(LevelRun run) { _run = run; }
 
+        public bool SwapMode => _swapMode;
+
         public override void Build(RectTransform root)
         {
             _boosters = new BoosterService(App.Meta.Wallet, App.Config.Economy);
+            _hint = HintPolicy.For(L.Id, App.Profile.EasyMode, _run.IsDaily);
             S.StateChanged += OnState;
             S.AutoUndone += _ => { App.Nav.Toast("Tezgâh doldu, son parça geri alındı."); Refresh(); };
 
-            var v = Ui.VStack(root, 18, 24).Stretch();
+            var v = Ui.VStack(root, 14, 20).Stretch();
             BuildTop(v);
-            _hint = Ui.Label(v, "", 38, Theme.Ink, TextAnchor.MiddleCenter, false, 70);
+            _hintText = Ui.Label(v, "", 36, Theme.Ink, TextAnchor.MiddleCenter, false, 64);
             BuildBoard(v);
-            Ui.Spacer(v, 10);
-            _trayRow = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 240, "Tray");
-            _bonusRow = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 120, "Bonus");
-            _boosterRow = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 150, "Boosters");
+            _remaining = Ui.Label(v, "", 32, Theme.Muted, TextAnchor.MiddleCenter, true, 46);
+            _trayRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, 236, "Tray");
+            _bonusRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, 120, "Bonus");
+            _boosterRow = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 160, "Boosters");
             Ui.Spacer(v);
 
             BuildTray();
             BuildBoosters();
             Refresh();
+            _starsShown = CurrentStars();
+            IntroBoard();
             ShowIntroHints();
         }
 
@@ -73,43 +84,107 @@ namespace Kilim.Game
 
         private void BuildTop(Transform parent)
         {
-            var top = Ui.HStack(parent, 16, 0, TextAnchor.MiddleCenter, 110, "Top");
+            var top = Ui.HStack(parent, 18, 0, TextAnchor.MiddleCenter, 132, "Top");
             top.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
-            Ui.Button(top, "II", Pause, Theme.Neutral, Theme.Ink, 100, 48, 110);
-            var mid = Ui.VStack(top, 6, 0, TextAnchor.MiddleCenter);
-            Ui.Size(mid.gameObject, -1, 110, 1);
-            Ui.Label(mid, _run.IsDaily ? "Günün Deseni" : L.Boss ? $"Bölüm {L.Id} · Usta" : $"Bölüm {L.Id}", 40, Theme.Ink, TextAnchor.MiddleCenter, true, 50);
-            var barRow = Ui.HStack(mid, 10, 0, TextAnchor.MiddleCenter, 40);
+            var pause = Ui.Button(top, "", Pause, Theme.Panel, Theme.Ink, 112, 40, 112);
+            Ui.Icon(pause.transform, Art.Icon("pause"), 52, Theme.Ink);
+
+            var mid = Ui.VStack(top, 8, 0, TextAnchor.MiddleCenter);
+            Ui.Size(mid.gameObject, -1, 132, 1);
+            string title = _run.IsDaily ? "Günün Deseni" : L.Boss ? $"Bölüm {L.Id} · Usta" : $"Bölüm {L.Id}";
+            Ui.Label(mid, title, 44, Theme.Ink, TextAnchor.MiddleCenter, true, 54);
+
+            var barRow = Ui.HStack(mid, 12, 0, TextAnchor.MiddleCenter, 70);
             barRow.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             var barHolder = Ui.Rect(barRow, "BarHolder");
-            Ui.Size(barHolder.gameObject, -1, 30, 1);
-            _bar = Ui.Bar(barHolder, 30, Theme.Gold, Theme.Neutral);
-            ((RectTransform)barHolder.GetChild(0)).Stretch();
-            // 2★ ve 3★ işaretleri
+            Ui.Size(barHolder.gameObject, -1, 70, 1);
+            var barArea = Ui.Rect(barHolder, "BarArea");
+            barArea.anchorMin = new Vector2(0, 1);
+            barArea.anchorMax = new Vector2(1, 1);
+            barArea.pivot = new Vector2(0.5f, 1);
+            barArea.sizeDelta = new Vector2(0, 30);
+            _bar = Ui.Bar(barArea, 30, Theme.Gold, Theme.Neutral);
+            ((RectTransform)barArea.GetChild(0)).Stretch();
+            // Yıldız eşikleri çubuğun ALTINDA (başlıkla çakışmaz).
             float t2 = (float)L.Star2Cells / L.Star3Cells;
-            Marker(barHolder, t2, "2★");
-            Marker(barHolder, 1f, "3★");
-            _percent = Ui.Label(barRow, "%0", 32, Theme.Ink, TextAnchor.MiddleRight, true);
-            Ui.Size(_percent.gameObject, 110, 40);
-            _remaining = Ui.Label(top, "", 34, Theme.Muted, TextAnchor.MiddleCenter, true);
-            Ui.Size(_remaining.gameObject, 170, 110);
+            _star2 = Marker(barHolder, t2, "★★");
+            _star3 = Marker(barHolder, 1f, "★★★");
+            _percent = Ui.Label(barRow, "%0", 34, Theme.Ink, TextAnchor.MiddleRight, true);
+            Ui.Size(_percent.gameObject, 104, 70);
+
+            if (_hint == HintLevel.Full)
+            {
+                var spacer = Ui.Rect(top, "Balance");
+                Ui.Size(spacer.gameObject, 112, 112, 0);
+            }
+            else PatternCard(top, 124);
         }
 
-        private static void Marker(Transform bar, float t, string label)
+        private static Text Marker(RectTransform holder, float t, string label)
         {
-            var m = Ui.Box(bar, "Marker", Theme.Ink);
+            var m = Ui.Box(holder, "Marker", Theme.Ink);
             m.sprite = null;
             m.type = Image.Type.Simple;
+            m.raycastTarget = false;
             var rt = (RectTransform)m.transform;
-            rt.anchorMin = new Vector2(t, 0);
-            rt.anchorMax = new Vector2(t, 1);
-            rt.sizeDelta = new Vector2(4, 0);
-            var lbl = Ui.Label(bar, label, 22, Theme.Ink);
+            rt.anchorMin = rt.anchorMax = new Vector2(t, 1);
+            rt.pivot = new Vector2(t >= 1 ? 1 : 0.5f, 1);
+            rt.sizeDelta = new Vector2(4, 34);
+            var lbl = Ui.Label(holder, label, 24, Theme.Muted, t >= 1 ? TextAnchor.UpperRight : TextAnchor.UpperCenter, true);
             var lrt = (RectTransform)lbl.transform;
-            lrt.anchorMin = new Vector2(t, 1);
-            lrt.anchorMax = new Vector2(t, 1);
-            lrt.pivot = new Vector2(t >= 1 ? 1 : 0.5f, 0);
-            lrt.sizeDelta = new Vector2(70, 28);
+            lrt.anchorMin = lrt.anchorMax = new Vector2(t, 1);
+            lrt.pivot = new Vector2(t >= 1 ? 1 : 0.5f, 1);
+            lrt.anchoredPosition = new Vector2(0, -36);
+            lrt.sizeDelta = new Vector2(120, 32);
+            return lbl;
+        }
+
+        /// <summary>Desen kartı: hedef desenin küçük önizlemesi. Dokununca büyür (ipucu azaldıkça desen buradan okunur).</summary>
+        private void PatternCard(Transform parent, float size)
+        {
+            var card = Ui.Box(parent, "PatternCard", Theme.BoardBg, size, size);
+            Ui.Size(card.gameObject, size, size, 0);
+            Ui.Soft(card, 6);
+            DrawPattern(card.transform, size, 6);
+            var btn = card.gameObject.AddComponent<Button>();
+            btn.targetGraphic = card;
+            card.gameObject.AddComponent<PressFx>();
+            btn.onClick.AddListener(() => { Audio.Click(); ShowPatternLarge(); });
+        }
+
+        private void DrawPattern(Transform root, float size, float pad)
+        {
+            int n = L.Size;
+            float pitch = (size - 2 * pad) / n;
+            for (int r = 0; r < n; r++)
+                for (int c = 0; c < n; c++)
+                {
+                    if (!L.IsPlayable(r, c)) continue;
+                    var img = Ui.Box(root, "P", Theme.Motif(L.Motif[r, c].Split('|')[0]));
+                    img.sprite = Art.TileFlat;
+                    img.raycastTarget = false;
+                    var rt = (RectTransform)img.transform;
+                    rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0, 1);
+                    rt.sizeDelta = new Vector2(pitch - 2, pitch - 2);
+                    rt.anchoredPosition = new Vector2(pad + c * pitch + 1, -(pad + r * pitch + 1));
+                }
+        }
+
+        private void ShowPatternLarge()
+        {
+            var card = App.Nav.Modal(dimTapCloses: true);
+            Ui.Label(card, "Desen kartı", 52, Theme.Ink, TextAnchor.MiddleCenter, true);
+            var holder = Ui.Rect(card, "Holder");
+            Ui.Size(holder.gameObject, -1, 700);
+            var board = Ui.Box(holder, "Big", Theme.BoardBg);
+            var rt = (RectTransform)board.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = new Vector2(700, 700);
+            DrawPattern(board.transform, 700, 14);
+            Ui.Label(card, _hint == HintLevel.None
+                ? "Tahtada artık ipucu yok. Parçaları bu desene göre yerleştir; eşleşen her hücre yıldıza yaklaştırır."
+                : "Tahtada yalnızca şekiller var. Renkleri bu karttan oku.", 34, Theme.Muted);
+            Ui.Button(card, "Tamam", () => App.Nav.Close(card));
         }
 
         // -----------------------------------------------------------------
@@ -121,6 +196,8 @@ namespace Kilim.Game
             var holder = Ui.Rect(parent, "BoardHolder");
             Ui.Size(holder.gameObject, -1, BoardSize);
             var bg = Ui.Box(holder, "Board", Theme.BoardBg);
+            Ui.Round(bg, 1.4f);
+            Ui.Soft(bg, 12);
             _board = (RectTransform)bg.transform;
             _board.anchorMin = _board.anchorMax = new Vector2(0.5f, 1);
             _board.pivot = new Vector2(0, 1);
@@ -139,9 +216,9 @@ namespace Kilim.Game
                     var img = Ui.Box(_board, $"C{r}_{c}", Theme.CellEmpty);
                     var rt = (RectTransform)img.transform;
                     rt.anchorMin = rt.anchorMax = new Vector2(0, 1);
-                    rt.pivot = new Vector2(0, 1);
+                    rt.pivot = new Vector2(0.5f, 0.5f);
                     rt.sizeDelta = new Vector2(cell, cell);
-                    rt.anchoredPosition = new Vector2(BoardPad + c * _pitch, -(BoardPad + r * _pitch));
+                    rt.anchoredPosition = new Vector2(BoardPad + c * _pitch + cell / 2, -(BoardPad + r * _pitch + cell / 2));
                     img.raycastTarget = false;
                     var g = Ui.Icon(img.transform, null, 0);
                     ((RectTransform)g.transform).Stretch(cell * 0.28f, cell * 0.28f, cell * 0.28f, cell * 0.28f);
@@ -156,6 +233,15 @@ namespace Kilim.Game
                 }
         }
 
+        /// <summary>Açılış: hücreler köşegen dalga halinde belirir.</summary>
+        private void IntroBoard()
+        {
+            int n = L.Size;
+            for (int r = 0; r < n; r++)
+                for (int c = 0; c < n; c++)
+                    if (L.IsPlayable(r, c)) Fx.PopIn(_cells[r, c].transform, 0.32f, 0.02f * (r + c));
+        }
+
         private void RefreshBoard()
         {
             int n = L.Size;
@@ -165,7 +251,7 @@ namespace Kilim.Game
                     if (!L.IsPlayable(r, c)) continue;
                     var img = _cells[r, c];
                     var g = _glyphs[r, c];
-                    string motif = L.Motif[r, c];
+                    string motif = L.Motif[r, c].Split('|')[0];
                     var here = new Cell(r, c);
                     if (S.Board.OwnerAt(r, c) != Board.Empty)
                     {
@@ -176,17 +262,30 @@ namespace Kilim.Game
                     }
                     else if (_ghost.Contains(here))
                     {
-                        img.color = Theme.WithAlpha(Theme.Motif(_ghostColor), 0.45f);
+                        img.color = Theme.WithAlpha(Theme.Motif(_ghostColor), 0.5f);
                         Mark(g, "", Color.clear);
-                        _outlines[r, c].enabled = L.Matches(r, c, _ghostColor);
+                        // İpucu yoksa sürüklerken eşleşme gösterilmez (desen kartından okunmalı).
+                        _outlines[r, c].enabled = _hint != HintLevel.None && L.Matches(r, c, _ghostColor);
                     }
                     else
                     {
-                        // Boş hücre: motif rengi %22 + şekil işareti (renk körlüğü)
-                        var mc = Theme.Motif(motif.Split('|')[0]);
-                        img.color = Color.Lerp(Theme.CellEmpty, mc, 0.22f);
-                        Mark(g, motif.Split('|')[0], Theme.WithAlpha(mc, 0.55f));
                         _outlines[r, c].enabled = false;
+                        switch (_hint)
+                        {
+                            case HintLevel.Full:
+                                var mc = Theme.Motif(motif);
+                                img.color = Color.Lerp(Theme.CellEmpty, mc, 0.22f);
+                                Mark(g, motif, Theme.WithAlpha(mc, 0.55f));
+                                break;
+                            case HintLevel.Glyph:
+                                img.color = Theme.CellEmpty;
+                                Mark(g, motif, Theme.WithAlpha(Theme.Muted, 0.32f));
+                                break;
+                            default:
+                                img.color = Theme.CellEmpty;
+                                Mark(g, "", Color.clear);
+                                break;
+                        }
                     }
                 }
         }
@@ -217,9 +316,16 @@ namespace Kilim.Game
         {
             _ghost.Clear();
             _ghostColor = color;
-            if (anchor.HasValue)
+            if (anchor.HasValue && shape != null)
                 foreach (var c in shape.Cells) _ghost.Add(anchor.Value.Offset(c));
             RefreshBoard();
+        }
+
+        /// <summary>Hücrenin tahta merkezine göre konumu (yüzen yazılar için).</summary>
+        private Vector2 CellCenter(Cell c)
+        {
+            float cell = _pitch - CellGap;
+            return new Vector2(BoardPad + c.Col * _pitch + cell / 2 - BoardSize / 2, -(BoardPad + c.Row * _pitch + cell / 2) + BoardSize / 2);
         }
 
         // -----------------------------------------------------------------
@@ -228,9 +334,9 @@ namespace Kilim.Game
 
         private void BuildTray()
         {
-            for (int i = 0; i < GameSession.TraySlots; i++) _slots.Add(TraySlotView.Create(_trayRow, this, i, 230));
+            for (int i = 0; i < GameSession.TraySlots; i++) _slots.Add(TraySlotView.Create(_trayRow, this, i, 228));
             for (int i = 0; i < GameSession.BonusSlots; i++)
-                _slots.Add(TraySlotView.Create(_bonusRow, this, GameSession.TraySlots + i, 110));
+                _slots.Add(TraySlotView.Create(_bonusRow, this, GameSession.TraySlots + i, 112));
             if (App.Profile.LeftHanded) // sol el modu: tezgâh ve güçlendiriciler aynalanır (şekiller değil, sıra)
             {
                 _trayRow.GetComponent<HorizontalLayoutGroup>().reverseArrangement = true;
@@ -244,34 +350,90 @@ namespace Kilim.Game
         /// <summary>Tezgâh parçasına dokunuş: döndür (ya da Değiştir modunda değiştir).</summary>
         public void OnSlotTap(int slot)
         {
-            if (!IsPlaying || S.Tray[slot] == null) return;
             if (_swapMode)
             {
-                _swapMode = false;
+                // Değiştir kayıp anında da (kurtarma) çalışır.
+                if (S.State == SessionState.Won || App.Nav.HasModal || S.Tray[slot] == null) return;
+                if (slot >= GameSession.TraySlots) { App.Nav.Toast("Tek İlmek değiştirilemez."); return; }
+                ExitSwapMode();
                 UseBooster(Booster.Swap, slot);
+                _slots[slot].PopIn();
                 return;
             }
+            if (!IsPlaying || S.Tray[slot] == null) return;
             if (!TutorialAllowsRotate()) return;
             S.Rotate(slot);
             Audio.Play("rotate");
+            Haptic.Tick();
             Refresh();
+            _slots[slot].Spin();
         }
 
         /// <summary>Bırakma. Geçerliyse yerleşir; değilse parça yuvasına döner (ceza yok).</summary>
         public bool OnDrop(int slot, Cell? anchor)
         {
             SetGhost(null, null, null);
-            if (!IsPlaying || !anchor.HasValue) return false;
-            if (!TutorialAllowsMove(slot, anchor.Value)) { Audio.Play("invalid"); App.Nav.Toast("Önce gösterilen hamleyi yap."); return false; }
+            if (!IsPlaying) return false;
+            if (!anchor.HasValue) { Invalid(slot); return false; }
+            if (!TutorialAllowsMove(slot, anchor.Value)) { Invalid(slot); App.Nav.Toast("Önce gösterilen hamleyi yap."); return false; }
             var piece = S.Tray[slot];
             bool rotated = piece.Rotation != 0;
+            int starsBefore = CurrentStars();
             var res = S.Place(slot, anchor.Value);
-            if (!res.Success) return false;
+            if (!res.Success) { Invalid(slot); return false; }
             Audio.Place(res.MatchedCells > 0);
+            Haptic.Light();
             if (S.PlacementCount % 5 == 1)
                 App.Analytics.Track("piece_placed", ("level", L.Id), ("index", S.PlacementCount), ("rotated", rotated), ("motif_match_cells", res.MatchedCells));
             Refresh();
+            Celebrate(res, piece, starsBefore);
+            if (slot < GameSession.TraySlots && S.Tray[slot] != null) _slots[slot].PopIn(0.12f);
             return true;
+        }
+
+        private void Invalid(int slot)
+        {
+            Audio.Play("invalid");
+            Fx.Shake((RectTransform)_slots[slot].transform, 16, 0.32f);
+        }
+
+        /// <summary>Yerleşim kutlaması: hücreler zıplar, eşleşenler altın parlar, ardışık tam eşleşmede övgü, yıldız eşiği.</summary>
+        private void Celebrate(PlaceResult res, TrayPiece piece, int starsBefore)
+        {
+            for (int i = 0; i < res.Cells.Count; i++)
+            {
+                var c = res.Cells[i];
+                var img = _cells[c.Row, c.Col];
+                Fx.Pop(img.transform, 1.16f, 0.3f, i * 0.035f);
+                if (S.Board.IsMatchAt(c.Row, c.Col))
+                    Fx.Tint(img, Color.Lerp(Theme.Motif(piece.Color), Color.white, 0.55f), Theme.Motif(piece.Color), 0.45f, Ease.OutQuad, i * 0.035f);
+            }
+            bool full = !piece.IsSingleStitch && res.MatchedCells == res.Cells.Count;
+            _streak = full ? _streak + 1 : 0;
+            var center = CellCenter(res.Cells[res.Cells.Count / 2]);
+            if (res.MatchedCells > 0)
+                Fx.FloatText(_board, center, _streak >= 2 ? Praise[Mathf.Min(_streak - 2, Praise.Length - 1)] : $"+{res.MatchedCells}", Theme.Gold, _streak >= 2 ? 64 : 54);
+
+            int starsNow = CurrentStars();
+            if (starsNow > starsBefore && starsNow > _starsShown)
+            {
+                _starsShown = starsNow;
+                var lbl = starsNow >= 3 ? _star3 : _star2;
+                if (lbl != null)
+                {
+                    lbl.color = Theme.Gold;
+                    Fx.Pop(lbl.transform, 1.6f, 0.5f);
+                }
+                Audio.Play(starsNow >= 3 ? "star3" : "star2");
+                Haptic.Medium();
+            }
+        }
+
+        /// <summary>Şu anki eşleşmeye göre kazanılacak yıldız (çubuk işaretleri için).</summary>
+        private int CurrentStars()
+        {
+            int m = S.Board.MatchCount;
+            return m >= L.Star3Cells ? 3 : m >= L.Star2Cells ? 2 : 1;
         }
 
         // -----------------------------------------------------------------
@@ -282,23 +444,37 @@ namespace Kilim.Game
         {
             Ui.Clear(_boosterRow);
             if (_run.IsDaily) return; // zen modunda güçlendirici yok
-            BoosterButton(Booster.Undo, "Geri Al");
-            BoosterButton(Booster.Swap, "Değiştir");
-            BoosterButton(Booster.SingleStitch, "Tek İlmek");
+            BoosterButton(Booster.Undo, "Geri Al", "undo");
+            BoosterButton(Booster.Swap, _swapMode ? "Vazgeç" : "Değiştir", "swap");
+            BoosterButton(Booster.SingleStitch, "Tek İlmek", "stitch");
         }
 
-        private void BoosterButton(Booster b, string name)
+        private void BoosterButton(Booster b, string name, string icon)
         {
             var w = App.Meta.Wallet;
             var cfg = App.Config.Economy;
-            string label;
             bool unlocked = w.IsUnlocked(b) || w.BoosterCount(b) > 0;
-            if (!unlocked) label = $"{name}\nBölüm {cfg.BoosterUnlockLevel[b]}";
-            else if (w.BoosterCount(b) > 0) label = $"{name}\n×{w.BoosterCount(b)}";
-            else label = $"{name}\n● {cfg.BoosterPrice[b]}";
-            var btn = Ui.Button(_boosterRow, label, () => OnBoosterTap(b), unlocked ? Theme.Panel : Theme.Neutral, Theme.Ink, 150, 34);
-            bool applicable = unlocked && (_boosters.IsApplicable(S, b, FirstOccupiedSlot()) || b == Booster.Swap && S.RemainingInQueue > 0);
-            Ui.SetEnabled(btn, applicable && S.State == SessionState.Playing);
+            bool active = b == Booster.Swap && _swapMode;
+            var bg = active ? Theme.Gold : unlocked ? Theme.Panel : Theme.Neutral;
+            var btn = Ui.Button(_boosterRow, "", () => OnBoosterTap(b), bg, Theme.Ink, 156, 30);
+            var label = Ui.ButtonLabel(btn);
+            var inner = Ui.VStack(btn.transform, 2, 6, TextAnchor.MiddleCenter);
+            inner.Stretch(8, 8, 8, 14);
+            var ic = Ui.Icon(inner, unlocked ? Art.Icon(icon) : Art.Lock, 64, unlocked ? Theme.Ink : Theme.Muted);
+            Ui.Size(ic.gameObject, 64, 64, 0);
+            Ui.Label(inner, name, 30, unlocked ? Theme.Ink : Theme.Muted, TextAnchor.MiddleCenter, true, 36);
+            label.text = "";
+            if (!unlocked)
+            {
+                Ui.Label(inner, $"Bölüm {cfg.BoosterUnlockLevel[b]}'da", 24, Theme.Muted, TextAnchor.MiddleCenter, false, 28);
+                return;
+            }
+            if (w.BoosterCount(b) > 0) Ui.Badge(btn.transform, w.BoosterCount(b).ToString(), Theme.Ok);
+            else Ui.Badge(btn.transform, $"●{cfg.BoosterPrice[b]}", Theme.Gold);
+            bool applicable = active || _boosters.IsApplicable(S, b, FirstOccupiedSlot()) || b == Booster.Swap && S.RemainingInQueue > 0;
+            bool live = S.State == SessionState.Playing || S.State == SessionState.Failed && _swapMode;
+            Ui.SetEnabled(btn, applicable && live);
+            if (active) Fx.Pulse(btn.targetGraphic, Theme.Gold, Theme.Cream, 0.8f);
         }
 
         private int FirstOccupiedSlot()
@@ -309,13 +485,44 @@ namespace Kilim.Game
 
         private void OnBoosterTap(Booster b)
         {
-            if (!IsPlaying) return;
-            if (b == Booster.Swap)
+            var w = App.Meta.Wallet;
+            if (!w.IsUnlocked(b) && w.BoosterCount(b) == 0)
             {
-                _swapMode = true;
-                App.Nav.Toast("Değiştirilecek parçaya dokun.");
+                App.Nav.Toast($"{BoosterName(b)} {App.Config.Economy.BoosterUnlockLevel[b]}. bölümde açılır.");
                 return;
             }
+            if (b == Booster.Swap)
+            {
+                if (_swapMode) { ExitSwapMode(); if (S.State == SessionState.Failed) FailFlow.Show(_run, this); return; }
+                if (!IsPlaying) return;
+                EnterSwapMode();
+                return;
+            }
+            if (!IsPlaying) return;
+            UseBooster(b, -1);
+        }
+
+        private void EnterSwapMode()
+        {
+            _swapMode = true;
+            Haptic.Tick();
+            foreach (var s in _slots) s.SetSwapHighlight(true);
+            Refresh();
+        }
+
+        private void ExitSwapMode()
+        {
+            _swapMode = false;
+            foreach (var s in _slots) s.SetSwapHighlight(false);
+            Refresh();
+        }
+
+        public static string BoosterName(Booster b) => b == Booster.Undo ? "Geri Al" : b == Booster.Swap ? "Değiştir" : "Tek İlmek";
+
+        /// <summary>Kayıp kartından kurtarma: güçlendirici uygulanır, oyun kaldığı yerden sürer.</summary>
+        public void Rescue(Booster b)
+        {
+            if (b == Booster.Swap) { EnterSwapMode(); App.Nav.Toast("Değiştirmek istediğin parçaya dokun."); return; }
             UseBooster(b, -1);
         }
 
@@ -330,6 +537,9 @@ namespace Kilim.Game
                     _run.BoostersUsed.Add(b.ToString());
                     App.Analytics.Track("booster_used", ("type", b.ToString()), ("level", L.Id), ("source", fromStock ? "free" : "coin"));
                     App.Save();
+                    Audio.Play(b == Booster.Undo ? "rotate" : "unlock");
+                    Haptic.Medium();
+                    if (b == Booster.SingleStitch) App.Delay(0.05f, () => { foreach (var s in _slots) if (s.Slot >= GameSession.TraySlots) s.PopIn(); });
                     break;
                 case BoosterUseResult.NotEnoughCoins:
                     CoinPacks.Show(App, App.Config.Economy.BoosterPrice[b] - w.Coins, Refresh);
@@ -350,7 +560,8 @@ namespace Kilim.Game
             if (_board == null) return;
             RefreshBoard();
             foreach (var s in _slots) s.Render();
-            _remaining.text = Loc.T($"Kalan {S.RemainingPieces}");
+            int left = S.RemainingPieces;
+            _remaining.text = Loc.T(left == 0 ? "Parça kalmadı" : $"Kalan {left} parça");
             float pct = (float)S.PatternPercent;
             _bar(pct);
             _percent.text = $"%{Mathf.RoundToInt(pct * 100)}";
@@ -364,11 +575,13 @@ namespace Kilim.Game
             if (st == SessionState.Won)
             {
                 _ending = true;
+                if (_swapMode) ExitSwapMode();
                 Audio.Play("win");
+                Haptic.Success();
                 Refresh();
-                // 9.3 son parça oturunca dokuma animasyonu (1,4 sn), sonra Kazandın
-                App.StartCoroutine(WeaveAnim());
-                App.Delay(1.4f, () =>
+                // 9.3 son parça oturunca dokuma dalgası + konfeti, sonra Kazandın
+                WeaveAnim();
+                App.Delay(1.5f, () =>
                 {
                     var report = App.Meta.CompleteWin(_run);
                     App.Save();   // ödül tek işlemde kalıcı (UAT WIN-08)
@@ -381,29 +594,35 @@ namespace Kilim.Game
             }
             else if (st == SessionState.Failed)
             {
+                if (_swapMode) ExitSwapMode();
                 Refresh();
                 Audio.Play("fail");
+                Haptic.Medium();
+                Fx.Shake(_board, 14, 0.4f);
                 App.Analytics.Track("level_fail", ("level", L.Id), ("attempt", _run.Attempt), ("pieces_left", S.RemainingPieces),
                     ("cells_left", S.Board.PlayableCells - S.Board.FilledCount));
-                App.Delay(0.6f, () => FailFlow.Show(_run, this)); // 600 ms tahta görünür
+                App.Delay(0.6f, () => { if (S.State == SessionState.Failed && App.Nav.Current == this) FailFlow.Show(_run, this); }); // 600 ms tahta görünür
+            }
+            else if (st == SessionState.Playing)
+            {
+                Refresh();
             }
         }
 
-        private System.Collections.IEnumerator WeaveAnim()
+        private void WeaveAnim()
         {
             int n = L.Size;
-            for (int d = 0; d < 2 * n; d++)
-            {
-                for (int r = 0; r < n; r++)
+            for (int r = 0; r < n; r++)
+                for (int c = 0; c < n; c++)
                 {
-                    int c = d - r;
-                    if (c < 0 || c >= n || !L.IsPlayable(r, c) || _cells == null) continue;
-                    _cells[r, c].transform.localScale = new Vector3(1.08f, 1.08f, 1);
+                    if (!L.IsPlayable(r, c)) continue;
+                    var img = _cells[r, c];
+                    float d = 0.045f * (r + c);
+                    Fx.Pop(img.transform, 1.14f, 0.34f, d);
+                    var col = img.color;
+                    Fx.Tint(img, Color.Lerp(col, Color.white, 0.6f), col, 0.5f, Ease.OutQuad, d);
                 }
-                yield return new WaitForSecondsRealtime(1.2f / (2 * n));
-            }
-            if (_cells == null) yield break;
-            foreach (var img in _cells) if (img != null) img.transform.localScale = Vector3.one;
+            App.Delay(0.045f * 2 * n, () => Fx.Confetti(App.Nav.Overlay, new Vector2(0, -100), 60));
         }
 
         /// <summary>Devam alındıktan sonra oyuna dönüş.</summary>
@@ -424,12 +643,13 @@ namespace Kilim.Game
                     if (_run.IsDaily) App.StartDaily();
                     else { App.Meta.GiveUp(_run); App.Save(); App.StartLevel(L.Id); }
                 }),
+                ("Bölüm haritası", () => App.Nav.Show(new LevelMapScreen())),
                 ("Ana menü", () => App.GoHome()),
             });
         }
 
         // -----------------------------------------------------------------
-        // Öğretici (Spec 3 8.4): Bölüm 1 ilk hamle zorunlu; 2: desen; 4: döndürme. Güçlendirici açılışları.
+        // Öğretici (Spec 3 8.4): Bölüm 1 ilk hamle zorunlu; 2: desen; 4: döndürme. Güçlendirici ve zorluk açılışları.
         // -----------------------------------------------------------------
 
         private bool FirstMoveForced => !_run.IsDaily && L.Id == 1 && L.Tutorial && S.PlacementCount == 0 && L.Solution.Count > 0;
@@ -449,19 +669,30 @@ namespace Kilim.Game
 
         private void UpdateTutorialHint()
         {
-            if (_hint == null) return;
+            if (_hintText == null) return;
+            if (_swapMode) { _hintText.text = Loc.T("Değiştirmek istediğin parçaya dokun."); return; }
             if (FirstMoveForced)
             {
                 var step = L.Solution[0];
                 string colorName = L.Queue[step.QueueIndex].Color == "L" ? "Lacivert" : "Bu";
-                _hint.text = Loc.T($"Nine: \"{colorName} parçayı aynı renkli izin üstüne koy.\"");
-                SetGhost(Shape.From(step.Cells), new Cell(MinRow(step.Cells), MinCol(step.Cells)), L.Queue[step.QueueIndex].Color);
-                _ghost.Clear(); // yalnızca bir kez çiz (Refresh döngüsünü engelle)
+                _hintText.text = Loc.T($"Nine: \"{colorName} parçayı aynı renkli izin üstüne koy.\"");
+                SetGhostSilently(Shape.From(step.Cells), new Cell(MinRow(step.Cells), MinCol(step.Cells)), L.Queue[step.QueueIndex].Color);
             }
-            else if (!_run.IsDaily && L.Id == 2 && S.PlacementCount < 2) _hint.text = Loc.T("Rengi motifle eşleşen parça desen yıldızı kazandırır.");
-            else if (!_run.IsDaily && L.Id == 4 && S.PlacementCount == 0) _hint.text = Loc.T("Parçaya dokun: saat yönünde döner.");
-            else if (_run.IsDaily) _hint.text = Loc.T("Süre yok, kaybetmek yok.");
-            else _hint.text = Loc.T("");
+            else if (!_run.IsDaily && L.Id == 2 && S.PlacementCount < 2) _hintText.text = Loc.T("Rengi motifle eşleşen parça desen yıldızı kazandırır.");
+            else if (!_run.IsDaily && L.Id == 4 && S.PlacementCount == 0) _hintText.text = Loc.T("Parçaya dokun: saat yönünde döner.");
+            else if (_run.IsDaily) _hintText.text = Loc.T("Süre yok, kaybetmek yok.");
+            else if (_hint != HintLevel.Full && S.PlacementCount == 0) _hintText.text = Loc.T("Desen kartına dokun: hedef deseni gör.");
+            else _hintText.text = "";
+        }
+
+        /// <summary>Öğretici hayaleti bir kez çizer (Refresh döngüsüne girmeden).</summary>
+        private void SetGhostSilently(Shape shape, Cell anchor, string color)
+        {
+            _ghost.Clear();
+            _ghostColor = color;
+            foreach (var c in shape.Cells) _ghost.Add(anchor.Offset(c));
+            RefreshBoard();
+            _ghost.Clear();
         }
 
         private static int MinRow(IReadOnlyList<Cell> cs) { int m = int.MaxValue; foreach (var c in cs) m = Mathf.Min(m, c.Row); return m; }
@@ -469,17 +700,30 @@ namespace Kilim.Game
 
         private void ShowIntroHints()
         {
-            if (_run.IsDaily) return;
+            if (_run.IsDaily || _run.Attempt != 1) return;
             foreach (var kv in App.Config.Economy.BoosterUnlockLevel)
-                if (kv.Value == L.Id && _run.Attempt == 1)
+                if (kv.Value == L.Id)
                 {
-                    string name = kv.Key == Booster.Undo ? "Geri Al" : kv.Key == Booster.Swap ? "Değiştir" : "Tek İlmek";
-                    string what = kv.Key == Booster.Undo ? "Son yerleşimi geri alır."
-                        : kv.Key == Booster.Swap ? "Seçtiğin parçayı kuyruğun sonuna gönderir."
-                        : "Tezgâha 1 hücrelik ek parça koyar (desen yüzdesini düşürür).";
-                    App.Nav.Confirm($"Yeni: {name}", $"{what}\n3 tane hediye!", "Anladım", null, null, null);
-                    Audio.Play("unlock");
+                    string what = kv.Key == Booster.Undo ? "Son yerleşimi geri alır. Tezgâh dolduğunda da kurtarır."
+                        : kv.Key == Booster.Swap ? "Seçtiğin parçayı kuyruğun sonuna gönderir, yerine sıradaki gelir."
+                        : "Tezgâha 1 hücrelik ek parça koyar: kalan boşlukları kapatır (desen yüzdesini düşürür).";
+                    NewThing($"Yeni: {BoosterName(kv.Key)}", $"{what}\n3 tane hediye!", Art.Icon(kv.Key == Booster.Undo ? "undo" : kv.Key == Booster.Swap ? "swap" : "stitch"));
                 }
+            if (!App.Profile.EasyMode && L.Id == HintPolicy.GlyphFrom)
+                NewThing("Usta dokumacı", "Tahtada artık renkler yok, yalnızca şekiller. Renkleri sağ üstteki desen kartından oku.", Art.Icon("pattern"));
+            if (!App.Profile.EasyMode && L.Id == HintPolicy.NoneFrom)
+                NewThing("Ezbere dokuma", "Bundan sonra tahta boş. Desen kartına bak, deseni aklında tut ve doku!\n(Ayarlar › Kolay mod ipuçlarını geri getirir.)", Art.Icon("pattern"));
+        }
+
+        private void NewThing(string title, string body, Sprite icon)
+        {
+            var card = App.Nav.Modal();
+            var ic = Ui.Icon(card, icon, 150, Theme.Primary);
+            Fx.PopIn(ic.transform, 0.45f, 0.1f);
+            Ui.Label(card, title, 54, Theme.Ink, TextAnchor.MiddleCenter, true);
+            Ui.Label(card, body, 36, Theme.Muted);
+            Ui.Button(card, "Anladım", () => App.Nav.Close(card));
+            Audio.Play("unlock");
         }
     }
 
@@ -489,18 +733,24 @@ namespace Kilim.Game
         private GameScreen _game;
         private int _slot;
         private float _size;
+        private Image _bg;
         private RectTransform _content;
         private RectTransform _floating;
         private bool _dragging;
         private int _pointerId = int.MinValue;
+        private TrayPiece _last;
+
+        public int Slot => _slot;
 
         public static TraySlotView Create(Transform parent, GameScreen game, int slot, float size)
         {
-            var bg = Ui.Box(parent, $"Slot{slot}", Theme.WithAlpha(Theme.Neutral, 0.6f), size, size);
+            var bg = Ui.Box(parent, $"Slot{slot}", Theme.WithAlpha(Theme.Sand, 0.85f), size, size);
+            Ui.Soft(bg, 6);
             var v = bg.gameObject.AddComponent<TraySlotView>();
             v._game = game;
             v._slot = slot;
             v._size = size;
+            v._bg = bg;
             v._content = Ui.Rect(bg.transform, "Piece");
             v._content.anchorMin = v._content.anchorMax = v._content.pivot = new Vector2(0.5f, 0.5f);
             return v;
@@ -510,9 +760,27 @@ namespace Kilim.Game
         {
             Ui.Clear(_content);
             var p = _game.PieceAt(_slot);
-            if (p == null || _dragging) return;
-            float cell = Mathf.Min((_size - 24) / Mathf.Max(p.Shape.Width, p.Shape.Height), _size / 4.2f);
+            if (p == null || _dragging) { _last = p; return; }
+            float cell = Mathf.Min((_size - 28) / Mathf.Max(p.Shape.Width, p.Shape.Height), _size / 4.2f);
             PieceRenderer.Draw(_content, p.Shape, p.Color, cell, cell * 0.08f);
+            if (_last != null && !ReferenceEquals(_last, p)) PopIn(); // yeni gelen parça
+            _last = p;
+        }
+
+        public void PopIn(float delay = 0) => Fx.PopIn(_content, 0.34f, delay);
+
+        public void Spin()
+        {
+            _content.localRotation = Quaternion.Euler(0, 0, 90);
+            Fx.To(_content, 0.22f, Ease.OutBack, k => _content.localRotation = Quaternion.Euler(0, 0, 90 * (1 - k)), null, 0, "spin");
+        }
+
+        public void SetSwapHighlight(bool on)
+        {
+            if (_bg == null) return;
+            Fx.Kill(_bg);
+            if (on && _slot < GameSession.TraySlots && _game.PieceAt(_slot) != null) Fx.Pulse(_bg, Theme.WithAlpha(Theme.Sand, 0.85f), Theme.WithAlpha(Theme.Gold, 0.9f), 0.8f);
+            else _bg.color = Theme.WithAlpha(Theme.Sand, 0.85f);
         }
 
         public void OnPointerClick(PointerEventData e)
@@ -524,7 +792,7 @@ namespace Kilim.Game
         public void OnBeginDrag(PointerEventData e)
         {
             var p = _game.PieceAt(_slot);
-            if (p == null || !_game.IsPlaying || _pointerId != int.MinValue) return; // ikinci parmak yok sayılır
+            if (p == null || !_game.IsPlaying || _game.SwapMode || _pointerId != int.MinValue) return; // ikinci parmak yok sayılır
             _pointerId = e.pointerId;
             _dragging = true;
             Render();
@@ -532,7 +800,9 @@ namespace Kilim.Game
             _floating.anchorMin = _floating.anchorMax = new Vector2(0, 0);
             _floating.pivot = new Vector2(0.5f, 0);
             float cell = _game.Pitch - GameScreen.CellGap;
-            PieceRenderer.Draw(_floating, p.Shape, p.Color, cell, GameScreen.CellGap, topLeftOrigin: true);
+            PieceRenderer.Draw(_floating, p.Shape, p.Color, cell, GameScreen.CellGap, topLeftOrigin: true, lifted: true);
+            Fx.Scale(_floating, 0.6f, 1f, 0.22f, Ease.OutBack);
+            Haptic.Tick();
             Move(e);
         }
 
@@ -560,8 +830,9 @@ namespace Kilim.Game
             var p = _game.PieceAt(_slot);
             var anchor = p != null ? _game.AnchorFor(e.position, p.Shape) : null;
             EndDrag();
-            _game.OnDrop(_slot, anchor);
+            bool placed = _game.OnDrop(_slot, anchor);
             _game.Refresh();
+            if (!placed) PopIn();
         }
 
         /// <summary>Uygulama arka plana giderse parça tezgâha döner (Spec 1 §3).</summary>
@@ -575,22 +846,28 @@ namespace Kilim.Game
             _pointerId = int.MinValue;
             if (_floating != null) Destroy(_floating.gameObject);
             _floating = null;
+            _last = null; // geri dönüşte "yeni parça" zıplaması olmasın
             Render();
+            _last = _game.PieceAt(_slot);
         }
     }
 
     public static class PieceRenderer
     {
-        /// <summary>Şekli hücre kutularıyla çizer. topLeftOrigin=false: kök merkezine ortalar.</summary>
-        public static void Draw(RectTransform root, Shape shape, string color, float cell, float gap, bool topLeftOrigin = false)
+        /// <summary>Şekli hücre kutularıyla çizer. topLeftOrigin=false: kök merkezine ortalar. lifted: sürüklenirken gölge.</summary>
+        public static void Draw(RectTransform root, Shape shape, string color, float cell, float gap, bool topLeftOrigin = false, bool lifted = false)
         {
             float pitch = cell + gap;
             float w = shape.Width * pitch - gap, h = shape.Height * pitch - gap;
             root.sizeDelta = new Vector2(w, h);
+            var baseColor = Theme.Motif(color);
             foreach (var c in shape.Cells)
             {
-                var img = Ui.Box(root, "P", Theme.Motif(color));
+                var img = Ui.Box(root, "P", baseColor);
                 img.raycastTarget = false;
+                var sh = img.gameObject.AddComponent<Shadow>();
+                sh.effectColor = lifted ? new Color(0, 0, 0, 0.28f) : Theme.WithAlpha(Theme.Darker(baseColor, 0.62f), 1f);
+                sh.effectDistance = lifted ? new Vector2(0, -cell * 0.18f) : new Vector2(0, -cell * 0.09f);
                 var rt = (RectTransform)img.transform;
                 rt.anchorMin = rt.anchorMax = new Vector2(0, 1);
                 rt.pivot = new Vector2(0, 1);
@@ -599,7 +876,7 @@ namespace Kilim.Game
                 var s = Art.Motif(color);
                 if (s != null)
                 {
-                    var g = Ui.Icon(img.transform, s, 0, new Color(1, 1, 1, 0.5f));
+                    var g = Ui.Icon(img.transform, s, 0, new Color(1, 1, 1, 0.55f));
                     ((RectTransform)g.transform).Stretch(cell * 0.28f, cell * 0.28f, cell * 0.28f, cell * 0.28f);
                 }
             }

@@ -290,6 +290,64 @@ namespace Kilim.Core.Tests
             Assert.Equal(0, m.Wallet.Ilmek);
         }
 
+        [Test("META-06")]
+        public static void HousesChainAfterFirstIsDone()
+        {
+            Assert.True(Home.Houses.Count >= 4, "en az 4 mekân");
+            foreach (var h in Home.Houses)
+            {
+                Assert.Equal(20, h.Tasks.Count, h.Name);
+                Assert.Equal(5, h.Areas.Length, h.Name);
+                Assert.Equal(5, h.AreaArt.Length, h.Name);
+            }
+            var ids = new System.Collections.Generic.HashSet<string>();
+            foreach (var t in Home.All) Assert.True(ids.Add(t.Id), "tekil görev kimliği " + t.Id);
+            var p = new PlayerProfile();
+            Assert.False(Home.IsUnlocked(p, Home.Houses[1]));
+            foreach (var t in Home.Houses[0].Tasks) p.HomeTasksDone.Add(t.Id);
+            Assert.True(Home.IsUnlocked(p, Home.Houses[1]));
+            Assert.Equal(Home.Houses[1], Home.CurrentHouse(p));
+            Assert.Equal(Home.Houses[1].Tasks[0], Home.NextTask(p));
+        }
+
+        [Test("LVL-07")]
+        public static void ReplayDoesNotAdvanceAndPaysHalf()
+        {
+            var m = NewMeta();
+            var r1 = m.CompleteWin(WinLevel(m, Region1[0]));
+            Assert.False(r1.IsReplay);
+            Assert.Equal(2, m.Profile.CurrentLevel);
+            int ilmek = m.Wallet.Ilmek, piggy = m.Wallet.Piggy;
+            var r2 = m.CompleteWin(WinLevel(m, Region1[0]));
+            Assert.True(r2.IsReplay);
+            Assert.Equal(r1.Coins / 2, r2.Coins);
+            Assert.Equal(2, m.Profile.CurrentLevel, "ilerleme değişmez");
+            Assert.Equal(ilmek, m.Wallet.Ilmek, "yeni yıldız yoksa ilmek yok");
+            Assert.Equal(piggy, m.Wallet.Piggy, "tekrarda kumbara yok");
+            Assert.Equal(3, r2.PreviousBest);
+        }
+
+        [Test("LVL-08")]
+        public static void HintsFadeWithLevel()
+        {
+            Assert.Equal(HintLevel.Full, HintPolicy.For(1, false, false));
+            Assert.Equal(HintLevel.Glyph, HintPolicy.For(HintPolicy.GlyphFrom, false, false));
+            Assert.Equal(HintLevel.None, HintPolicy.For(HintPolicy.NoneFrom, false, false));
+            Assert.Equal(HintLevel.Full, HintPolicy.For(100, true, false), "kolay mod");
+            Assert.Equal(HintLevel.Full, HintPolicy.For(100, false, true), "günün deseni");
+        }
+
+        [Test("SAVE-05")]
+        public static void NewProfileFieldsRoundTrip()
+        {
+            var p = new PlayerProfile { EasyMode = true, IntroSeen = true };
+            p.HousesIntroduced.Add("bag");
+            var q = PlayerProfile.FromJson(p.ToJson());
+            Assert.True(q.EasyMode);
+            Assert.True(q.IntroSeen);
+            Assert.True(q.HousesIntroduced.Contains("bag"));
+        }
+
         [Test("FAIL-09")]
         public static void ThirdConsecutiveGiveUpGiftsUndoOnce()
         {

@@ -160,13 +160,14 @@ namespace Kilim.Core
         /// Bölüm kazancı. Coin her kazanışta verilir; ilmek yalnızca en iyi yıldız farkı kadar eklenir (Spec 1 §4).
         /// Dönen değer: (coin, eklenen ilmek, kumbaraya eklenen).
         /// </summary>
-        public (int coins, int ilmek, int piggy) ApplyWin(int levelId, int stars, bool boss, EconomyConfig cfg)
+        public (int coins, int ilmek, int piggy) ApplyWin(int levelId, int stars, bool boss, EconomyConfig cfg, bool replay = false)
         {
-            int coins = cfg.WinCoins(stars, boss);
+            // Tekrar oynanan bölüm: coin yarı, kumbara yok; ilmek yine yalnızca yeni yıldız kadar.
+            int coins = replay ? cfg.WinCoins(stars, boss) / 2 : cfg.WinCoins(stars, boss);
             int prev = BestStars(levelId);
             int ilmek = Math.Max(0, stars - prev);
             if (stars > prev) _bestStars[levelId] = stars;
-            int piggyAdd = Math.Max(0, Math.Min(cfg.PiggyPerWin, cfg.PiggyCap - Piggy));
+            int piggyAdd = replay ? 0 : Math.Max(0, Math.Min(cfg.PiggyPerWin, cfg.PiggyCap - Piggy));
             Coins += coins;
             Ilmek += ilmek;
             Piggy += piggyAdd;

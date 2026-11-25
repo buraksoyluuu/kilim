@@ -33,6 +33,14 @@ namespace Kilim.Core
         public bool CanDoubleCoins;
         public bool Doubled;
         public bool BoostersUnlockedNext;
+        /// <summary>Daha önce kazanılmış bölümün tekrarı (ilerleme ilerlemez).</summary>
+        public bool IsReplay;
+        /// <summary>Önceki en iyi yıldız (tekrar oynamada "yeni rekor" için).</summary>
+        public int PreviousBest;
+        /// <summary>Sıradaki bölümde açılacak güçlendirici (yoksa null).</summary>
+        public Booster? UnlocksNext;
+        /// <summary>Bu kazançla ev görevi yapılabilir hale geldi.</summary>
+        public bool TaskAffordable;
         public int DurationSeconds;
     }
 
@@ -110,7 +118,9 @@ namespace Kilim.Core
             }
             else
             {
-                var (coins, ilmek, piggy) = Wallet.ApplyWin(run.Level.Id, stars, run.Level.Boss, Config.Economy);
+                r.IsReplay = run.Level.Id < Profile.CurrentLevel;
+                r.PreviousBest = Wallet.BestStars(run.Level.Id);
+                var (coins, ilmek, piggy) = Wallet.ApplyWin(run.Level.Id, stars, run.Level.Boss, Config.Economy, r.IsReplay);
                 r.Coins = coins;
                 r.Ilmek = ilmek;
                 r.Piggy = piggy;
@@ -126,7 +136,9 @@ namespace Kilim.Core
                 }
                 Profile.ConsecutiveFails = 0;
                 foreach (var kv in Config.Economy.BoosterUnlockLevel)
-                    if (kv.Value == Profile.CurrentLevel) r.BoostersUnlockedNext = true;
+                    if (kv.Value == Profile.CurrentLevel && !r.IsReplay) { r.BoostersUnlockedNext = true; r.UnlocksNext = kv.Key; }
+                var task = Home.NextTask(Profile);
+                r.TaskAffordable = ilmek > 0 && task != null && Wallet.Ilmek >= task.Cost && Wallet.Ilmek - ilmek < task.Cost;
             }
             r.PassLevelAfter = Pass.Level(Profile);
             run.Completed = true;

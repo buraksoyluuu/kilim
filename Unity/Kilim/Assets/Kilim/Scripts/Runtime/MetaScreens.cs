@@ -6,122 +6,6 @@ using UnityEngine.UI;
 
 namespace Kilim.Game
 {
-    /// <summary>1 · Ana ekran (Spec 3 §1).</summary>
-    public sealed class HomeScreen : UiScreen
-    {
-        private Text _starterTimer, _raceTimer;
-
-        public override void Build(RectTransform root)
-        {
-            var app = App;
-            var p = app.Profile;
-            var m = app.Meta;
-            ClaimRaceIfEnded();
-
-            var v = Ui.VStack(root, 24, 32).Stretch();
-            Ui.Band(v);
-
-            // Üst: coin, ilmek, ayarlar
-            var top = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 100);
-            Ui.CoinPill(top, app);
-            var il = Ui.HStack(top, 8, 0, TextAnchor.MiddleCenter, 100);
-            il.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
-            Ui.Icon(il, Art.Ilmek, 70);
-            Ui.Label(il, $"{m.Wallet.Ilmek}", 44, Theme.Ink, TextAnchor.MiddleLeft, true);
-            Ui.Button(top, "Ayarlar", () => app.Nav.Show(new SettingsScreen()), Theme.Neutral, Theme.Ink, 100, 36);
-
-            // Sol/sağ kısayollar
-            var row = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 170);
-            var piggyFull = m.Wallet.Piggy >= app.Config.Economy.PiggyCap;
-            Ui.Button(row, $"Kumbara\n{Fmt.N(m.Wallet.Piggy)}{(piggyFull ? " · dolu!" : "")}", () => app.Nav.Show(new PiggyScreen()),
-                piggyFull ? Theme.Gold : Theme.Panel, Theme.Ink, 170, 34);
-            Ui.Button(row, $"Sezon\nSeviye {m.Pass.Level(p)}", () => app.Nav.Show(new PassScreen()), Theme.Panel, Theme.Ink, 170, 34);
-            Ui.Button(row, $"Günlük{(m.Daily.StampedToday(p) ? " ✓" : " •")}\nSeri {m.Daily.CurrentStreak(p)}", () => app.Nav.Show(new DailyScreen()), Theme.Panel, Theme.Ink, 170, 34);
-            var race = Ui.Button(row, "Yarış", () => app.Nav.Show(new RaceScreen()), Theme.Panel, Theme.Ink, 170, 34);
-            _raceTimer = Ui.ButtonLabel(race);
-
-            // Başlangıç paketi
-            if (m.Starter.IsVisible(p))
-            {
-                var offer = Ui.Card(v, 8, 24, Theme.WithAlpha(Theme.Gold, 0.25f));
-                Ui.Label(offer, "Başlangıç paketi · bir kez", 38, Theme.Ink, TextAnchor.MiddleCenter, true);
-                _starterTimer = Ui.Label(offer, "", 34, Theme.Muted);
-                Ui.Button(offer, $"2.000 coin + 3'er güçlendirici + 24 sa reklamsız · {app.Iap.LocalizedPrice(Skus.Starter)}",
-                    () => app.Buy(Skus.Starter, "home", () => app.GoHome()), Theme.Primary, Color.white, 110, 32);
-            }
-
-            Ui.Spacer(v);
-            var next = Home.NextTask(p);
-            var nine = Ui.HStack(v, 20, 0, TextAnchor.MiddleLeft, 170);
-            nine.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
-            Ui.Icon(nine, Art.Nine, 160);
-            var note = Ui.Label(nine, next != null ? $"Nine: \"{next.NineNote}\"" : "Nine: \"Ev pırıl pırıl oldu, ellerine sağlık.\"", 38, Theme.Ink, TextAnchor.MiddleLeft, false, 160);
-            Ui.Size(note.gameObject, -1, 160, 1);
-
-            // Ana buton
-            int lvl = p.CurrentLevel;
-            if (app.Levels.Get(lvl) != null)
-            {
-                Ui.Button(v, $"Bölüm {lvl}", () => app.StartLevel(lvl), Theme.Primary, Color.white, 220, 80);
-            }
-            else
-            {
-                // İçerik sonu (UAT LVL-05)
-                var card = Ui.Card(v);
-                Ui.Label(card, "Yeni desenler yakında", 52, Theme.Ink, TextAnchor.MiddleCenter, true);
-                Ui.Label(card, "Bu arada Günün Deseni ve Tezgâh Yarışı açık.", 36, Theme.Muted);
-                int replay = FirstNotPerfect();
-                if (replay > 0) Ui.Button(card, $"Bölüm {replay}'i 3★ yap", () => app.StartLevel(replay));
-            }
-            Ui.Spacer(v);
-
-            var bottom = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 150);
-            bool canTask = next != null && m.Wallet.Ilmek >= next.Cost;
-            Ui.Button(bottom, canTask ? "Ev •" : "Ev", () => app.Nav.Show(new DecorScreen()), canTask ? Theme.Gold : Theme.Panel, Theme.Ink, 150, 44);
-            Ui.Button(bottom, "Mağaza", () => app.Nav.Show(new ShopScreen()), Theme.Panel, Theme.Ink, 150, 44);
-            Tick();
-        }
-
-        private int FirstNotPerfect()
-        {
-            for (int i = 1; i <= App.Levels.Count; i++) if (App.Meta.Wallet.BestStars(i) < 3) return i;
-            return 0;
-        }
-
-        private void ClaimRaceIfEnded()
-        {
-            var m = App.Meta;
-            if (m.Race.IsActive || App.Profile.RaceWeek != m.Race.WeekId || App.Profile.RaceRewardClaimedWeek == m.Race.WeekId) return;
-            if (App.Backend.Online)
-            {
-                // Sunucu otoritatif: sıra ve ödül sunucudan (UAT RACE-05..07)
-                var week = m.Race.WeekId;
-                App.Profile.RaceRewardClaimedWeek = week;
-                App.Save();
-                App.Backend.RaceClaim(week, (r, c) =>
-                {
-                    if (c <= 0) return;
-                    App.Meta.Wallet.AddCoins(c);
-                    if (r == 1) App.Profile.Cosmetics.Add($"frame-race-{week}");
-                    App.Save();
-                    App.Nav.Confirm("Tezgâh Yarışı bitti", $"{r}. oldun! +{Fmt.N(c)} coin", "Harika", null, null, null);
-                });
-                return;
-            }
-            var (rank, coins) = m.Race.ClaimIfEnded(App.Profile, m.Race.BuildGroup(App.Profile));
-            App.Save();
-            App.Analytics.Track("race_result", ("week", m.Race.WeekId), ("rank", rank), ("flags", App.Profile.RaceFlags));
-            if (coins > 0) App.Nav.Confirm("Tezgâh Yarışı bitti", $"{rank}. oldun! +{Fmt.N(coins)} coin", "Harika", null, null, null);
-        }
-
-        public override void Tick()
-        {
-            var m = App.Meta;
-            if (_starterTimer != null) _starterTimer.text = Loc.T($"Kalan {Fmt.Span(m.Starter.Remaining(App.Profile))}");
-            if (_raceTimer != null) _raceTimer.text = Loc.T(m.Race.IsActive ? $"Yarış\n{Fmt.Span(m.Race.Remaining)}" : "Yarış\nCuma");
-        }
-    }
-
     /// <summary>6 · Mağaza: başlangıç paketi → reklamsız → coin paketleri → kumbara; geri yükle altta.</summary>
     public sealed class ShopScreen : UiScreen
     {
@@ -348,76 +232,6 @@ namespace Kilim.Game
         public override bool OnBack() { App.GoHome(); return true; }
     }
 
-    /// <summary>5 · Ev: alan listesi + görev kartları; ilmek yeterse "Yap", stil seçimi varsa 3 seçenek.</summary>
-    public sealed class DecorScreen : UiScreen
-    {
-        public override void Build(RectTransform root)
-        {
-            var app = App;
-            var p = app.Profile;
-            var v = Ui.VStack(root, 0, 0).Stretch();
-            Ui.Header(v, "Nine'nin Evi", app.GoHome);
-            Ui.Label(v, $"✦ {p.Wallet.Ilmek} ilmek", 40, Theme.Ink, TextAnchor.MiddleCenter, true, 70);
-            var list = Ui.Scroll(v, 16, 24);
-            var next = Home.NextTask(p);
-            foreach (var area in Home.Areas)
-            {
-                Ui.Label(list, $"{area} · {Home.DoneInArea(p, area)}/4", 44, Theme.Ink, TextAnchor.MiddleLeft, true);
-                foreach (var t in Home.Region1.Where(x => x.Area == area))
-                {
-                    var task = t;
-                    var card = Ui.Card(list, 8, 24);
-                    bool done = p.HomeTasksDone.Contains(t.Id);
-                    Ui.Label(card, t.Title, 38, done ? Theme.Muted : Theme.Ink, TextAnchor.MiddleLeft, true);
-                    if (done)
-                    {
-                        if (t.Styles != null)
-                        {
-                            var styles = Ui.HStack(card, 8, 0, TextAnchor.MiddleCenter, 90);
-                            foreach (var s in t.Styles)
-                            {
-                                var style = s;
-                                bool sel = p.HomeStyles.TryGetValue(t.Id, out var cur) && cur == s;
-                                Ui.Button(styles, s, () => { Home.ChangeStyle(p, task, style); app.Save(); app.Nav.Show(new DecorScreen()); },
-                                    sel ? Theme.Gold : Theme.Neutral, Theme.Ink, 90, 32);
-                            }
-                        }
-                        else Ui.Label(card, "Tamam ✓", 32, Theme.Ok, TextAnchor.MiddleLeft);
-                    }
-                    else if (task == next)
-                    {
-                        if (Home.CanDo(p, task))
-                            Ui.Button(card, $"{task.Cost} ilmek · Yap", () => DoTask(task), Theme.Primary, Color.white, 100, 38);
-                        else
-                        {
-                            var row = Ui.HStack(card, 12, 0, TextAnchor.MiddleCenter, 100);
-                            Ui.Label(row, $"{task.Cost - p.Wallet.Ilmek} ilmek daha", 34, Theme.Muted);
-                            Ui.Button(row, "Oyna", () => app.StartLevel(p.CurrentLevel), Theme.Primary, Color.white, 100, 38);
-                        }
-                    }
-                    else Ui.Label(card, $"{task.Cost} ilmek · sırada bekliyor", 30, Theme.Muted, TextAnchor.MiddleLeft);
-                }
-            }
-        }
-
-        private void DoTask(HomeTask t)
-        {
-            var app = App;
-            void Finish(string style)
-            {
-                if (!Home.Do(app.Profile, t, style)) return;
-                app.Analytics.Track("task_done", ("region", 1), ("area", t.Area), ("task", t.Id), ("style", style ?? ""));
-                app.Save();
-                app.Nav.Show(new DecorScreen());
-                app.Nav.Confirm(t.Title, $"Nine: \"{t.NineNote}\"", "Güzel olmuş", null, null, null);
-            }
-            if (t.Styles == null) { Finish(null); return; }
-            app.Nav.Choice("Stil seç", "Sonra ücretsiz değiştirebilirsin.", t.Styles.Select(s => (s, (Action)(() => Finish(s)))).ToArray());
-        }
-
-        public override bool OnBack() { App.GoHome(); return true; }
-    }
-
     /// <summary>7 · Ayarlar.</summary>
     public sealed class SettingsScreen : UiScreen
     {
@@ -432,6 +246,8 @@ namespace Kilim.Game
             ConsentScreen.Toggle(list, "Efektler", p.Sfx, on => { p.Sfx = on; app.ApplySettings(); app.Save(); });
             ConsentScreen.Toggle(list, "Titreşim", p.Haptics, on => { p.Haptics = on; app.ApplySettings(); app.Save(); });
             ConsentScreen.Toggle(list, "Sol el modu", p.LeftHanded, on => { p.LeftHanded = on; app.Save(); });
+            ConsentScreen.Toggle(list, "Kolay mod (desen ipucu hep tahtada)", p.EasyMode, on => { p.EasyMode = on; app.Save(); });
+            Ui.Button(list, "Hikâyeyi yeniden izle", () => app.Nav.Show(new IntroScreen(() => app.Nav.Show(new SettingsScreen()))), Theme.Neutral, Theme.Ink, 110, 40);
             ConsentScreen.Toggle(list, "Günlük desen bildirimi", p.DailyNotification, on => { p.DailyNotification = on; app.Save(); });
             Ui.Button(list, Loc.Lang == "tr" ? "Dil: Türkçe" : "Dil: English", () =>
             {

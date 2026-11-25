@@ -22,6 +22,9 @@ namespace UnityEngine
         public T GetComponentInChildren<T>() => default;
     }
     public class Behaviour : Component { public bool enabled; }
+    public sealed class CanvasGroup : Behaviour { public float alpha = 1; public bool interactable, blocksRaycasts; }
+    public struct Quaternion { public static Quaternion Euler(float x, float y, float z) => default; public static Quaternion identity => default; }
+    public static class Random { public static float Range(float a, float b) => a; public static int Range(int a, int b) => a; }
     public class MonoBehaviour : Behaviour
     {
         public Coroutine StartCoroutine(IEnumerator r) => null;
@@ -47,6 +50,7 @@ namespace UnityEngine
         public Transform parent => null;
         public int childCount => 0;
         public Vector3 localScale;
+        public Quaternion localRotation;
         public Transform GetChild(int i) => null;
         public void SetParent(Transform p, bool worldPositionStays) { }
         public void SetAsFirstSibling() { }
@@ -77,6 +81,9 @@ namespace UnityEngine
         public static Vector2 zero => default; public static Vector2 one => default;
         public static Vector2 operator +(Vector2 a, Vector2 b) => default;
         public static Vector2 operator *(Vector2 a, float b) => default;
+        public static Vector2 operator -(Vector2 a, Vector2 b) => default;
+        public static Vector2 Lerp(Vector2 a, Vector2 b, float t) => default;
+        public static Vector2 LerpUnclamped(Vector2 a, Vector2 b, float t) => default;
     }
     public struct Vector3
     {
@@ -97,6 +104,10 @@ namespace UnityEngine
         public static float Clamp01(float v) => v; public static float Min(float a, float b) => a; public static int Min(int a, int b) => a;
         public static float Max(float a, float b) => a; public static int Max(int a, int b) => a; public static int RoundToInt(float f) => 0;
         public static float Clamp(float v, float a, float b) => v;
+        public static int Clamp(int v, int a, int b) => v;
+        public const float PI = 3.14159265f;
+        public static float Sin(float f) => 0; public static float Cos(float f) => 0; public static float Pow(float a, float b) => 0;
+        public static float Abs(float f) => f; public static float Lerp(float a, float b, float t) => a; public static float LerpUnclamped(float a, float b, float t) => a;
     }
     public static class Debug
     {
@@ -118,7 +129,7 @@ namespace UnityEngine
         public void Play() { } public void Stop() { } public void PlayOneShot(AudioClip c, float v) { }
     }
     public enum RuntimePlatform { IPhonePlayer, Android, WindowsEditor, OSXEditor }
-    public static class Time { public static float unscaledTime => 0; }
+    public static class Time { public static float unscaledTime => 0; public static float unscaledDeltaTime => 0; }
     public static class PlayerPrefs
     {
         public static string GetString(string k, string d) => d; public static void SetString(string k, string v) { }
@@ -147,7 +158,7 @@ namespace UnityEngine
         public static T GetBuiltinResource<T>(string path) where T : Object => null;
     }
     public enum RenderMode { ScreenSpaceOverlay, ScreenSpaceCamera, WorldSpace }
-    public sealed class Canvas : Behaviour { public RenderMode renderMode; public int sortingOrder; }
+    public sealed class Canvas : Behaviour { public RenderMode renderMode; public int sortingOrder; public static void ForceUpdateCanvases() { } }
     public sealed class Camera : Behaviour { }
     public static class RectTransformUtility
     {
@@ -198,12 +209,15 @@ namespace UnityEngine.EventSystems
     public interface IBeginDragHandler { void OnBeginDrag(PointerEventData e); }
     public interface IDragHandler { void OnDrag(PointerEventData e); }
     public interface IEndDragHandler { void OnEndDrag(PointerEventData e); }
+    public interface IPointerDownHandler { void OnPointerDown(PointerEventData e); }
+    public interface IPointerUpHandler { void OnPointerUp(PointerEventData e); }
+    public interface IPointerExitHandler { void OnPointerExit(PointerEventData e); }
 }
 
 namespace UnityEngine.UI
 {
     using UnityEngine.EventSystems;
-    public abstract class Graphic : UIBehaviour { public Color color; public bool raycastTarget; }
+    public abstract class Graphic : UIBehaviour { public Color color; public bool raycastTarget; public RectTransform rectTransform => null; }
     public abstract class MaskableGraphic : Graphic { }
     public sealed class Image : MaskableGraphic
     {
@@ -213,9 +227,10 @@ namespace UnityEngine.UI
     public sealed class Text : MaskableGraphic
     {
         public string text; public Font font; public int fontSize; public TextAnchor alignment; public FontStyle fontStyle;
-        public HorizontalWrapMode horizontalOverflow; public VerticalWrapMode verticalOverflow;
+        public HorizontalWrapMode horizontalOverflow; public VerticalWrapMode verticalOverflow; public float lineSpacing;
     }
-    public class Selectable : UIBehaviour { public bool interactable; public Graphic targetGraphic; }
+    public struct ColorBlock { public Color normalColor, highlightedColor, pressedColor, selectedColor, disabledColor; public float fadeDuration, colorMultiplier; }
+    public class Selectable : UIBehaviour { public bool interactable; public Graphic targetGraphic; public ColorBlock colors; }
     public sealed class Button : Selectable { public UnityEngine.Events.UnityEvent onClick = new UnityEngine.Events.UnityEvent(); }
     public sealed class CanvasScaler : UIBehaviour
     {
@@ -241,6 +256,7 @@ namespace UnityEngine.UI
     {
         public enum MovementType { Unrestricted, Elastic, Clamped }
         public bool horizontal, vertical; public MovementType movementType; public RectTransform content, viewport;
+        public float verticalNormalizedPosition, horizontalNormalizedPosition;
     }
     public abstract class BaseMeshEffect : UIBehaviour { }
     public class Shadow : BaseMeshEffect { public Color effectColor; public Vector2 effectDistance; }
