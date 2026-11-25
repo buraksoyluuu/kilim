@@ -80,6 +80,7 @@ jobs:
     needs: ios
     if: always() && inputs.platforms != 'android' && (needs.ios.result == 'success' || inputs.ios_run_id != '')
     runs-on: macos-latest
+    permissions: { contents: read, actions: read }
     steps:
       - uses: maxim-lobanov/setup-xcode@v1
         with: { xcode-version: latest-stable }
