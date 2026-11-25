@@ -142,7 +142,8 @@ namespace Kilim.Game
             var boldFont = Bold;
             t.font = bold ? boldFont : Font;
             t.text = Loc.T(text);
-            t.fontSize = size;
+            // Küçük metinler telefonda okunmuyordu (oyuncu videosu): 40 altı boyutlar %12 büyütülür.
+            t.fontSize = size < 40 ? Mathf.RoundToInt(size * 1.12f) : size;
             t.color = color ?? Theme.Ink;
             t.alignment = align;
             // Kalın font dosyası varsa sentetik kalın kullanılmaz (daha temiz kenar).
@@ -279,7 +280,9 @@ namespace Kilim.Game
             g.childControlHeight = true;
             g.childForceExpandWidth = true;
             g.childForceExpandHeight = true;
-            if (h >= 0) Size(rt.gameObject, -1, h);
+            // Sabit yükseklikli satır esnemez: HorizontalLayoutGroup forceExpand yüzünden kendini esnek bildirir,
+            // dikey yığında boş alanı paylaşıp uzuyordu (başlıkta dev beyaz sütunlar, uzun noktalar).
+            if (h >= 0) Size(rt.gameObject, -1, h, -1, 0);
             return rt;
         }
 

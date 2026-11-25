@@ -102,8 +102,8 @@ namespace Kilim.Game
             barArea.anchorMin = new Vector2(0, 1);
             barArea.anchorMax = new Vector2(1, 1);
             barArea.pivot = new Vector2(0.5f, 1);
-            barArea.sizeDelta = new Vector2(0, 30);
-            _bar = Ui.Bar(barArea, 30, Theme.Gold, Theme.Neutral);
+            barArea.sizeDelta = new Vector2(0, 38);
+            _bar = Ui.Bar(barArea, 38, Theme.Gold, Theme.Neutral);
             ((RectTransform)barArea.GetChild(0)).Stretch();
             // Yıldız eşikleri çubuğun ALTINDA (başlıkla çakışmaz).
             float t2 = (float)L.Star2Cells / L.Star3Cells;
@@ -129,12 +129,12 @@ namespace Kilim.Game
             var rt = (RectTransform)m.transform;
             rt.anchorMin = rt.anchorMax = new Vector2(t, 1);
             rt.pivot = new Vector2(t >= 1 ? 1 : 0.5f, 1);
-            rt.sizeDelta = new Vector2(4, 34);
-            var lbl = Ui.Label(holder, label, 24, Theme.Muted, t >= 1 ? TextAnchor.UpperRight : TextAnchor.UpperCenter, true);
+            rt.sizeDelta = new Vector2(4, 42);
+            var lbl = Ui.Label(holder, label, 28, Theme.Muted, t >= 1 ? TextAnchor.UpperRight : TextAnchor.UpperCenter, true);
             var lrt = (RectTransform)lbl.transform;
             lrt.anchorMin = lrt.anchorMax = new Vector2(t, 1);
             lrt.pivot = new Vector2(t >= 1 ? 1 : 0.5f, 1);
-            lrt.anchoredPosition = new Vector2(0, -36);
+            lrt.anchoredPosition = new Vector2(0, -42);
             lrt.sizeDelta = new Vector2(120, 32);
             return lbl;
         }

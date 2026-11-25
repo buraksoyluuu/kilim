@@ -84,14 +84,15 @@ namespace Kilim.Game
             var (art, title, body) = Pages[_page];
             var page = Ui.VStack(_pageRoot, 28, 0, TextAnchor.MiddleCenter).Stretch();
             var pic = Ui.Box(page, "Art", Theme.Sand);
-            Ui.Size(pic.gameObject, -1, 860);
+            Ui.Round(pic, 1.2f);
+            Ui.Size(pic.gameObject, -1, 560);
             Ui.Soft(pic, 10);
             var img = Ui.Icon(pic.transform, Art.Get(art), 0);
             img.preserveAspect = true;
             img.rectTransform.Stretch(16, 16, 16, 16);
             if (img.sprite == null) { img.sprite = Art.Nine; }
-            Ui.Label(page, title, 64, Theme.Primary, TextAnchor.MiddleCenter, true, 90);
-            Ui.Label(page, body, 40, Theme.Ink, TextAnchor.MiddleCenter, false, 200);
+            Ui.Label(page, title, 66, Theme.Primary, TextAnchor.MiddleCenter, true, 100);
+            Ui.Label(page, body, 42, Theme.Ink, TextAnchor.UpperCenter, false, 260);
             if (dir != 0)
             {
                 var rt = (RectTransform)page;
