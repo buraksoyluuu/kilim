@@ -1,12 +1,20 @@
 {
   "name": "Kilim.PlayModeTests",
   "rootNamespace": "Kilim.Tests",
-  "references": ["Kilim.Game", "Kilim.Core", "UnityEngine.TestRunner", "UnityEditor.TestRunner"],
+  "references": [
+    "Kilim.Game",
+    "Kilim.Core",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "overrideReferences": true,
-  "precompiledReferences": ["nunit.framework.dll"],
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
   "autoReferenced": false,
-  "defineConstraints": ["UNITY_INCLUDE_TESTS"],
-  "optionalUnityReferences": ["TestAssemblies"]
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ]
 }
