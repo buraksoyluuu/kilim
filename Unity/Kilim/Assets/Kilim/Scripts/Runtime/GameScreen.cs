@@ -14,7 +14,7 @@ namespace Kilim.Game
     public sealed class GameScreen : UiScreen
     {
         public const float BoardSize = 1000f;
-        public const float BoardPad = 12f;
+        public const float BoardPad = 38f;
         public const float CellGap = 6f;
         public const float DragLift = 180f;
 
@@ -195,9 +195,10 @@ namespace Kilim.Game
         {
             var holder = Ui.Rect(parent, "BoardHolder");
             Ui.Size(holder.gameObject, -1, BoardSize);
-            var bg = Ui.Box(holder, "Board", Theme.BoardBg);
-            Ui.Round(bg, 1.4f);
-            Ui.Soft(bg, 12);
+            var bg = Ui.Box(holder, "Board", Color.white);
+            if (Art.FrameWood != null) { bg.sprite = Art.FrameWood; bg.type = Image.Type.Sliced; }
+            else { bg.color = Theme.BoardBg; Ui.Round(bg, 1.4f); }
+            Ui.Soft(bg, 14);
             _board = (RectTransform)bg.transform;
             _board.anchorMin = _board.anchorMax = new Vector2(0.5f, 1);
             _board.pivot = new Vector2(0, 1);
@@ -214,6 +215,7 @@ namespace Kilim.Game
                 for (int c = 0; c < n; c++)
                 {
                     var img = Ui.Box(_board, $"C{r}_{c}", Theme.CellEmpty);
+                    if (Art.WeaveFlat != null) { img.sprite = Art.WeaveFlat; img.type = Image.Type.Simple; }
                     var rt = (RectTransform)img.transform;
                     rt.anchorMin = rt.anchorMax = new Vector2(0, 1);
                     rt.pivot = new Vector2(0.5f, 0.5f);
@@ -256,12 +258,14 @@ namespace Kilim.Game
                     if (S.Board.OwnerAt(r, c) != Board.Empty)
                     {
                         string col = S.Board.ColorAt(r, c);
+                        if (Art.Weave != null) img.sprite = Art.Weave;
                         img.color = Theme.Motif(col);
                         Mark(g, string.IsNullOrEmpty(col) ? "" : col, new Color(1, 1, 1, 0.5f));
                         _outlines[r, c].enabled = S.Board.IsMatchAt(r, c);
                     }
                     else if (_ghost.Contains(here))
                     {
+                        if (Art.WeaveFlat != null) img.sprite = Art.WeaveFlat;
                         img.color = Theme.WithAlpha(Theme.Motif(_ghostColor), 0.5f);
                         Mark(g, "", Color.clear);
                         // İpucu yoksa sürüklerken eşleşme gösterilmez (desen kartından okunmalı).
@@ -269,6 +273,7 @@ namespace Kilim.Game
                     }
                     else
                     {
+                        if (Art.WeaveFlat != null) img.sprite = Art.WeaveFlat;
                         _outlines[r, c].enabled = false;
                         switch (_hint)
                         {
@@ -864,6 +869,7 @@ namespace Kilim.Game
             foreach (var c in shape.Cells)
             {
                 var img = Ui.Box(root, "P", baseColor);
+                if (Art.Weave != null) { img.sprite = Art.Weave; img.type = Image.Type.Simple; }
                 img.raycastTarget = false;
                 var sh = img.gameObject.AddComponent<Shadow>();
                 sh.effectColor = lifted ? new Color(0, 0, 0, 0.28f) : Theme.WithAlpha(Theme.Darker(baseColor, 0.62f), 1f);

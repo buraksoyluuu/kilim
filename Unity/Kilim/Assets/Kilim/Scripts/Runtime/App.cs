@@ -146,9 +146,16 @@ namespace Kilim.Game
             bgImg.sprite = Art.Pattern;
             bgImg.type = Image.Type.Tiled;
             if (bgImg.sprite == null) bgImg.color = Theme.Bg;
+            // Işık: üstte sıcak parıltı, kenarlarda yumuşak kararma (düz kâğıt görünümünü kırar).
+            var vig = Ui.Panel(canvasGo.transform, "Vignette", Color.white);
+            var vigImg = vig.GetComponent<Image>();
+            vigImg.sprite = Art.Vignette;
+            vigImg.raycastTarget = false;
+            if (vigImg.sprite == null) vig.gameObject.SetActive(false);
             var safe = Ui.Rect(canvasGo.transform, "SafeArea").Stretch();
             safe.gameObject.AddComponent<SafeArea>();
             Nav = new Navigator(this, safe, (RectTransform)canvasGo.transform);
+            vig.SetAsFirstSibling();
             bg.SetAsFirstSibling();
         }
 

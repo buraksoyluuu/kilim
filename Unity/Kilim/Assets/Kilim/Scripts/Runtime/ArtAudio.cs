@@ -34,6 +34,12 @@ namespace Kilim.Game
         public static Sprite Pattern => Get("pattern_bg");
         public static Sprite Band => Get("band");
         public static Sprite Bubble => Get("bubble", 48);
+        /// <summary>Dokuma karo (tahta hücresi ve parçalar; motif rengiyle boyanır).</summary>
+        public static Sprite Weave => Get("weave");
+        public static Sprite WeaveFlat => Get("weave_flat");
+        /// <summary>Ahşap tezgâh çerçevesi (9-dilim).</summary>
+        public static Sprite FrameWood => Get("frame_wood", 64);
+        public static Sprite Vignette => Get("vignette");
 
         /// <summary>Arayüz simgesi (beyaz, çalışma anında renklendirilir): Resources/art/icon_{name}.png.</summary>
         public static Sprite Icon(string name) => Get("icon_" + name);
