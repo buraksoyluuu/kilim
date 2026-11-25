@@ -1,0 +1,46 @@
+# Kalıcı imza malzemesini BİR KEZ üretir (tekrar çalıştırılırsa yeni anahtar üretir, Play'e yüklendikten sonra
+# Android anahtarı değiştirilmemeli).
+#  - ANDROID_SIGNING: Android yükleme anahtarı (keystore + şifreler), yeni üretilir.
+#  - APPLE_DIST_CERT: iOS dağıtım sertifikası + özel anahtarı; cert_run_id verilirse o çalıştırmanın dist-cert
+#    artifact'ından alınır (Apple'da yeni sertifika üretilmez).
+# Çıktı: "signing-secrets" artifact'ı (1 gün). İçindeki her .txt dosyasının adı secret adıdır, içeriği değeridir.
+name: Setup signing (bir kez)
+on:
+  workflow_dispatch:
+    inputs:
+      cert_run_id:
+        description: "dist-cert artifact'ı olan Beta build çalıştırmasının numarası"
+        default: ""
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions: { contents: read, actions: read }
+    steps:
+      - if: inputs.cert_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-cert
+          path: dist-cert-in
+          run-id: ${{ inputs.cert_run_id }}
+          github-token: ${{ github.token }}
+      - name: Anahtarları üret
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p out
+          pass=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 28)
+          keytool -genkeypair -v -storetype PKCS12 -keystore kilim-upload.keystore -alias kilim-upload \
+            -keyalg RSA -keysize 4096 -validity 10000 -storepass "$pass" -keypass "$pass" \
+            -dname "CN=Burak Soylu, O=Kilim, C=TR" >/dev/null 2>&1
+          python3 - "$pass" <<'PY'
+          import base64, json, sys
+          p = sys.argv[1]
+          ks = base64.b64encode(open("kilim-upload.keystore", "rb").read()).decode()
+          blob = {"keystore": ks, "storepass": p, "alias": "kilim-upload", "keypass": p}
+          open("out/ANDROID_SIGNING.txt", "w").write(base64.b64encode(json.dumps(blob).encode()).decode())
+          PY
+          if [ -f dist-cert-in/APPLE_DIST_CERT.txt ]; then cp dist-cert-in/APPLE_DIST_CERT.txt out/; fi
+          keytool -list -keystore kilim-upload.keystore -storepass "$pass" | grep -i "SHA-256" || true
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with: { name: signing-secrets, path: out, retention-days: 1 }

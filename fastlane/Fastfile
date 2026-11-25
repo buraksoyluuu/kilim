@@ -1,5 +1,5 @@
-# iOS: Unity'nin ürettiği Xcode projesini bulutta otomatik imzalayıp (App Store Connect API anahtarı) TestFlight'a yükler.
-# Sertifika deposu (match) gerekmez: xcodebuild -allowProvisioningUpdates ile Apple bulut imzalama.
+# iOS: Unity'nin Xcode projesini kalıcı dağıtım sertifikası (APPLE_DIST_CERT) + API anahtarıyla alınan App Store
+# profiliyle imzalayıp TestFlight'a yükler. Android: AAB'yi Google Play internal teste yükler.
 require "base64"
 require "openssl"
 require "fileutils"
@@ -69,5 +69,16 @@ platform :ios do
               export_options: { signingStyle: "manual", teamID: team,
                                 provisioningProfiles: { "app.kilim.game" => profile_name } })
     upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+  end
+end
+
+platform :android do
+  desc "AAB → Google Play internal test (GOOGLE_PLAY_JSON: servis hesabı JSON anahtarı)"
+  lane :internal do
+    aab = Dir[File.expand_path("../build/Android/*.aab", __dir__)].first
+    UI.user_error!("AAB bulunamadı") unless aab
+    upload_to_play_store(package_name: "app.kilim.game", track: "internal", aab: aab,
+                         json_key_data: ENV.fetch("GOOGLE_PLAY_JSON"), release_status: "completed",
+                         skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true)
   end
 end

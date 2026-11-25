@@ -1,7 +1,9 @@
 # Test build'leri. Elle tetiklenir: Actions › Beta build › Run workflow.
 #  - Android: APK (telefona doğrudan kurulum) artifact olarak indirilir; Play anahtarı varsa AAB internal teste de gider.
 #  - iOS: Unity Xcode projesi → macOS'ta otomatik imzalama (App Store Connect API anahtarı) → TestFlight.
-# Secret'lar: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD; iOS için APPSTORE_P8 (AuthKey_U4H4GYWYG8.p8 içeriği).
+# Secret'lar: UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD; iOS: APPSTORE_P8, APPLE_DIST_CERT;
+# Android: ANDROID_SIGNING (kalıcı yükleme anahtarı), GOOGLE_PLAY_JSON (varsa AAB Play internal teste gider).
+# ANDROID_SIGNING ve APPLE_DIST_CERT "Setup signing (bir kez)" iş akışıyla üretilir.
 name: Beta build
 on:
   workflow_dispatch:
@@ -27,19 +29,53 @@ jobs:
       - run: dotnet run --project Core.Tests -c Release
       - run: dotnet build Tools/UnityTypecheck/Kilim.UnityTypecheck.csproj -c Release
 
+  meta:
+    runs-on: ubuntu-latest
+    outputs:
+      play: ${{ steps.m.outputs.play }}
+    steps:
+      - id: m
+        env: { PLAY: "${{ secrets.GOOGLE_PLAY_JSON }}", SIGN: "${{ secrets.ANDROID_SIGNING }}" }
+        run: echo "play=$([ -n "$PLAY" ] && [ -n "$SIGN" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
   android:
-    needs: tests
+    needs: [tests, meta]
     if: inputs.platforms != 'ios'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [apk, aab]
     steps:
-      - uses: jlumbroso/free-disk-space@v1.3.1
+      - name: Bu tür gerekli mi?
+        id: want
+        run: echo "go=$([ '${{ matrix.kind }}' = apk ] || [ '${{ needs.meta.outputs.play }}' = true ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+      - if: steps.want.outputs.go == 'true'
+        uses: jlumbroso/free-disk-space@v1.3.1
         with: { tool-cache: false, android: true, large-packages: false }
-      - uses: actions/checkout@v4
-      - uses: actions/cache@v4
+      - if: steps.want.outputs.go == 'true'
+        uses: actions/checkout@v4
+      - name: Yükleme anahtarı (ANDROID_SIGNING)
+        if: steps.want.outputs.go == 'true'
+        id: sign
+        env: { SIGN: "${{ secrets.ANDROID_SIGNING }}" }
+        run: |
+          if [ -z "$SIGN" ]; then echo "ANDROID_SIGNING yok: APK hata ayıklama anahtarıyla imzalanır (güncellemede önce kaldırmak gerekir)"; exit 0; fi
+          python3 - <<'PY'
+          import base64, json, os
+          d = json.loads(base64.b64decode(os.environ["SIGN"]))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as o:
+              for k in ("keystore", "storepass", "alias", "keypass"):
+                  if k != "alias": print(f"::add-mask::{d[k]}")
+                  o.write(f"{k}={d[k]}\n")
+          PY
+      - if: steps.want.outputs.go == 'true'
+        uses: actions/cache@v4
         with:
           path: Unity/Kilim/Library
           key: Library-Android-${{ hashFiles('Unity/Kilim/Packages/manifest.json') }}
-      - uses: game-ci/unity-builder@v4
+      - if: steps.want.outputs.go == 'true'
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -50,8 +86,22 @@ jobs:
           targetPlatform: Android
           buildMethod: Kilim.EditorTools.BuildScript.BuildFromCommandLine
           buildName: Kilim
-      - uses: actions/upload-artifact@v4
-        with: { name: kilim-android-apk, path: build/Android/*.apk, retention-days: 14 }
+          androidExportType: ${{ matrix.kind == 'aab' && 'androidAppBundle' || 'androidPackage' }}
+          androidVersionCode: ${{ github.run_number }}
+          androidKeystoreName: kilim-upload.keystore
+          androidKeystoreBase64: ${{ steps.sign.outputs.keystore }}
+          androidKeystorePass: ${{ steps.sign.outputs.storepass }}
+          androidKeyaliasName: ${{ steps.sign.outputs.alias }}
+          androidKeyaliasPass: ${{ steps.sign.outputs.keypass }}
+      - if: steps.want.outputs.go == 'true' && matrix.kind == 'apk'
+        uses: actions/upload-artifact@v4
+        with: { name: kilim-android-apk, path: build/Android/*.apk, retention-days: 30 }
+      - name: Google Play internal test
+        if: steps.want.outputs.go == 'true' && matrix.kind == 'aab'
+        env: { GOOGLE_PLAY_JSON: "${{ secrets.GOOGLE_PLAY_JSON }}" }
+        run: |
+          gem install fastlane --no-document
+          fastlane android internal
 
   ios:
     needs: tests
@@ -111,4 +161,4 @@ jobs:
           APPLE_TEAM_ID: 3UTU4G8NGA
       - if: always()
         uses: actions/upload-artifact@v4
-        with: { name: dist-cert, path: dist-cert, retention-days: 1, if-no-files-found: ignore }
+        with: { name: dist-cert, path: dist-cert, retention-days: 7, if-no-files-found: ignore }

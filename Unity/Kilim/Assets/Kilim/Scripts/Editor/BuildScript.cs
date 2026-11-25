@@ -125,8 +125,21 @@ namespace Kilim.EditorTools
             if (target.Equals("iOS", StringComparison.OrdinalIgnoreCase)) Build(BuildTarget.iOS, output ?? "build/iOS/Kilim");
             else
             {
-                bool aab = Environment.GetEnvironmentVariable("KILIM_AAB") == "1";
+                // GameCI: -androidExportType androidAppBundle → AAB; imza anahtarı -androidKeystore* argümanlarıyla gelir.
+                bool aab = (Arg("-androidExportType") ?? "").Equals("androidAppBundle", StringComparison.OrdinalIgnoreCase)
+                           || Environment.GetEnvironmentVariable("KILIM_AAB") == "1";
                 EditorUserBuildSettings.buildAppBundle = aab;
+                var ks = Arg("-androidKeystoreName");
+                if (!string.IsNullOrEmpty(ks) && File.Exists(ks))
+                {
+                    PlayerSettings.Android.useCustomKeystore = true;
+                    PlayerSettings.Android.keystoreName = Path.GetFullPath(ks);
+                    PlayerSettings.Android.keystorePass = Arg("-androidKeystorePass");
+                    PlayerSettings.Android.keyaliasName = Arg("-androidKeyaliasName");
+                    PlayerSettings.Android.keyaliasPass = Arg("-androidKeyaliasPass");
+                    Debug.Log("[Kilim] Kalıcı yükleme anahtarıyla imzalanıyor");
+                }
+                else if (aab) throw new Exception("AAB için imza anahtarı gerekli (ANDROID_SIGNING secret'ı)");
                 Build(BuildTarget.Android, output ?? (aab ? "build/Android/Kilim.aab" : "build/Android/Kilim.apk"));
             }
         }
@@ -134,6 +147,11 @@ namespace Kilim.EditorTools
         private static void Build(BuildTarget target, string path)
         {
             Configure();
+            // CI: GameCI -androidVersionCode verir (her build'de artan sayı, Play aynı kodu iki kez kabul etmez).
+            var cl = Environment.GetCommandLineArgs();
+            int vi = Array.IndexOf(cl, "-androidVersionCode");
+            if (vi >= 0 && vi + 1 < cl.Length && int.TryParse(cl[vi + 1], out var vcode) && vcode > 0)
+                PlayerSettings.Android.bundleVersionCode = vcode;
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
