@@ -1,11 +1,24 @@
 # iOS: Unity'nin ürettiği Xcode projesini bulutta otomatik imzalayıp (App Store Connect API anahtarı) TestFlight'a yükler.
 # Sertifika deposu (match) gerekmez: xcodebuild -allowProvisioningUpdates ile Apple bulut imzalama.
+require "base64"
+require "openssl"
 default_platform(:ios)
 
 platform :ios do
   lane :beta do
     key_path = File.expand_path("AuthKey.p8")
-    File.write(key_path, ENV.fetch("APPSTORE_P8"))
+    # Secret yapıştırılırken satır sonları kaybolabiliyor: gövdeyi ayıklayıp PEM'i yeniden kur.
+    raw = ENV.fetch("APPSTORE_P8").strip
+    raw = Base64.decode64(raw) unless raw.include?("PRIVATE KEY")
+    body = raw.gsub(/-----(BEGIN|END) PRIVATE KEY-----/, "").gsub(/\s+/, "")
+    UI.user_error!("APPSTORE_P8 boş ya da hatalı (gövde #{body.length} karakter)") if body.length < 100
+    pem = "-----BEGIN PRIVATE KEY-----\n#{body.scan(/.{1,64}/).join("\n")}\n-----END PRIVATE KEY-----\n"
+    File.write(key_path, pem)
+    begin
+      OpenSSL::PKey.read(pem)
+    rescue => e
+      UI.user_error!("APPSTORE_P8 okunamadı (#{e.message}); gövde #{body.length} karakter, AuthKey_*.p8 dosyasının tamamını yapıştır")
+    end
     api_key = app_store_connect_api_key(key_id: ENV.fetch("APPSTORE_KEY_ID"), issuer_id: ENV.fetch("APPSTORE_ISSUER_ID"), key_filepath: key_path)
     setup_ci
     project = Dir[File.expand_path("../build/iOS/**/Unity-iPhone.xcodeproj", __dir__)].first
