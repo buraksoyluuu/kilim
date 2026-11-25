@@ -15,7 +15,7 @@ Tek HTTPS uç noktası `api` (Cloud Functions v2, europe-west1) + Firestore. Kim
 
 ## Kurulum
 1. Firebase projesi (Blaze planı: dış API çağrısı için gerekli) → Authentication › Anonymous açık, Firestore (europe-west) açık.
-2. `npm i -g firebase-tools && firebase login && firebase use <proje-id>` (`.firebaserc`'deki `kilim-prod`'u değiştir).
+2. `npm i -g firebase-tools && firebase login && firebase use <proje-id>` (`.firebaserc`'deki `kilim-game`'u değiştir).
 3. Gizli anahtarlar:
    - `firebase functions:secrets:set APPLE_PRIVATE_KEY` (App Store Connect › Users and Access › Integrations › In-App Purchase anahtarı, .p8 içeriği)
    - `firebase functions:secrets:set GOOGLE_SERVICE_ACCOUNT` (Play Console'a bağlı servis hesabı JSON'u)

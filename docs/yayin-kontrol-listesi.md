@@ -9,7 +9,8 @@ Sahip: **[S]** = Burak (hesap/onay), **[G]** = geliştirici/Claude. Sıra öneml
 - [ ] App Store Connect › Business: yasal kimlik bilgisini güncelle → **Paid Apps Agreement** kabul → banka hesabı → vergi formları (W-8BEN) [S]. Bu olmadan satın alma ürünleri açılamaz.
 - [ ] AB Dijital Hizmetler Yasası (DSA) satıcı (trader) beyanı [S] — "trader" seçilirse adres/telefon AB mağazasında herkese açık görünür.
 - [ ] **Google Play Console** (tek seferlik 25 $; yeni kişisel hesaplarda yayından önce 12 test kullanıcısıyla 14 gün kapalı test zorunluluğu var — şirket hesabı önerilir).
-- [ ] **Firebase projesi** (Blaze planı) → `Backend/README.md` adımları.
+- [x] **Firebase projesi** `kilim-game` (proje no 114466984555): Anonymous Auth açık, Firestore `europe-west1` üretim modu, web istemci anahtarı `Resources/backend.json`'da.
+- [ ] Firebase **Blaze** planına geçiş (kart bilgisi) [S] → ardından Cloud Functions deploy [G].
 - [ ] **AdMob hesabı** → iOS ve Android uygulama + 2 reklam birimi (ödüllü, tam ekran). Mediation: ilk etapta AdMob + 2–3 ağ (ör. AppLovin, Unity Ads, Meta).
 - [ ] Ödeme/vergi profilleri: App Store Connect › Agreements, Tax, Banking; Play Console › Payments profile.
 
