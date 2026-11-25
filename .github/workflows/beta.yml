@@ -12,6 +12,9 @@ on:
       ios_run_id:
         description: "Dolu ise iOS Unity build'i atlanır, bu çalıştırmanın Xcode projesi TestFlight'a yüklenir"
         default: ""
+      cert_run_id:
+        description: "APPLE_DIST_CERT secret'ı yoksa sertifikayı bu çalıştırmanın dist-cert artifact'ından al"
+        default: ""
 env:
   KILIM_BUILD: ${{ github.run_number }}
 jobs:
@@ -90,6 +93,13 @@ jobs:
           name: ios-xcode
           path: build/iOS
           run-id: ${{ inputs.ios_run_id || github.run_id }}
+          github-token: ${{ github.token }}
+      - if: inputs.cert_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-cert
+          path: dist-cert-in
+          run-id: ${{ inputs.cert_run_id }}
           github-token: ${{ github.token }}
       - run: gem install fastlane --no-document
       - run: fastlane ios beta
