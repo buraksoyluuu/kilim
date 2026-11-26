@@ -86,7 +86,11 @@ namespace Kilim.Core
                 Profile.Attempts[level.Id] = Profile.AttemptsOf(level.Id) + 1;
                 Wallet.UnlockBoostersUpTo(level.Id, Config.Economy);
             }
-            var session = new GameSession(level) { ZenMode = isDaily };
+            var session = new GameSession(level)
+            {
+                ZenMode = isDaily,
+                AutoUndoOnStuck = !isDaily && (level.Id <= Config.Lives.FreeUntilLevel || Profile.EasyMode),
+            };
             return new LevelRun
             {
                 Level = level,

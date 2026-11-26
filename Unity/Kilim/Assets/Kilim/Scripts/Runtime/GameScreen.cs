@@ -56,7 +56,13 @@ namespace Kilim.Game
             Audio.Track("music_game");
             _hint = HintPolicy.For(L.Id, App.Profile.EasyMode, _run.IsDaily);
             S.StateChanged += OnState;
-            S.AutoUndone += _ => { App.Nav.Toast("Tezgâh doldu, son parça geri alındı."); Refresh(); };
+            S.AutoUndone += _ =>
+            {
+                App.Nav.Toast(_run.IsDaily ? "Tezgâh doldu, son parça geri alındı."
+                                           : "Tezgâh tıkandı, son parçayı geri aldık. Parçaya dokunup döndürmeyi dene!");
+                Refresh();
+                ShowRotateCoach(force: true);
+            };
 
             var v = Ui.VStack(root, 14, 20).Stretch();
             BuildTop(v);
@@ -73,6 +79,7 @@ namespace Kilim.Game
             Ui.Spacer(v);
 
             BuildTray();
+            App.Delay(0.8f, () => ShowRotateCoach());
             BuildBoosters();
             Refresh();
             _starsShown = CurrentStars();
@@ -364,6 +371,45 @@ namespace Kilim.Game
             return new[] { 0.16f, 0.30f, 0.44f }[_shade[r, c]];
         }
 
+        private GameObject _coach;
+
+        /// <summary>Coachmark: "Dokun → döner". Oyuncu bir kez döndürene kadar ilk parçanın üstünde, parça arada kendini döndürür.</summary>
+        private void ShowRotateCoach(bool force = false)
+        {
+            if (this == null || _coach != null || _run.IsDaily || (!force && App.Profile.RotateLearned)) return;
+            int slot = -1;
+            for (int i = 0; i < GameSession.TraySlots; i++)
+                if (S.Tray[i] != null && S.Tray[i].Shape.DistinctRotations().Count > 1) { slot = i; break; }
+            if (slot < 0) return;
+            var host = (RectTransform)_slots[slot].transform;
+            var bubble = Ui.Box(host, "RotateCoach", Theme.Ink);
+            var rt = (RectTransform)bubble.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.sizeDelta = new Vector2(300, 64);
+            rt.anchoredPosition = new Vector2(0, 10);
+            var t = Ui.Label(bubble.transform, "Dokun → döner ↻", 30, Color.white, TextAnchor.MiddleCenter, true, 64);
+            ((RectTransform)t.transform).Stretch();
+            var le = bubble.GetComponent<LayoutElement>() ?? bubble.gameObject.AddComponent<LayoutElement>();
+            le.ignoreLayout = true;
+            _coach = bubble.gameObject;
+            Fx.PopIn(rt, 0.3f);
+            void Loop()
+            {
+                if (this == null || _coach == null) return;
+                _slots[slot].Spin();
+                Fx.PopIn(rt, 0.25f);
+                App.Delay(2.4f, Loop);
+            }
+            App.Delay(0.6f, Loop);
+        }
+
+        private void HideRotateCoach()
+        {
+            if (_coach != null) UnityEngine.Object.Destroy(_coach);
+            _coach = null;
+        }
+
         /// <summary>Coinle ipucu: doğru parçayı ve yerini 3 sn gösterir.</summary>
         private void OnHintTap()
         {
@@ -438,6 +484,8 @@ namespace Kilim.Game
             if (!IsPlaying || S.Tray[slot] == null) return;
             if (!TutorialAllowsRotate()) return;
             S.Rotate(slot);
+            if (!App.Profile.RotateLearned) { App.Profile.RotateLearned = true; App.Save(); }
+            HideRotateCoach();
             Audio.Play("rotate");
             Haptic.Tick();
             Refresh();

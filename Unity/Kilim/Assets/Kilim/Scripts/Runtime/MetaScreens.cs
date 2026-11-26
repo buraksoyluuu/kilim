@@ -246,7 +246,7 @@ namespace Kilim.Game
             ConsentScreen.Toggle(list, "Efektler", p.Sfx, on => { p.Sfx = on; app.ApplySettings(); app.Save(); });
             ConsentScreen.Toggle(list, "Titreşim", p.Haptics, on => { p.Haptics = on; app.ApplySettings(); app.Save(); });
             ConsentScreen.Toggle(list, "Sol el modu", p.LeftHanded, on => { p.LeftHanded = on; app.Save(); });
-            ConsentScreen.Toggle(list, "Kolay mod (desen ipucu hep tahtada)", p.EasyMode, on => { p.EasyMode = on; app.Save(); });
+            ConsentScreen.Toggle(list, "Kolay mod (ipucu hep tahtada, tıkanınca son hamle geri alınır)", p.EasyMode, on => { p.EasyMode = on; app.Save(); });
             Ui.Button(list, "Hikâyeyi yeniden izle", () => app.Nav.Show(new IntroScreen(() => app.Nav.Show(new SettingsScreen()))), Theme.Neutral, Theme.Ink, 110, 40);
             ConsentScreen.Toggle(list, "Bildirimler", p.Notifications, on =>
             {

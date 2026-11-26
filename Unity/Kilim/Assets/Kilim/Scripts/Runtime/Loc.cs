@@ -125,7 +125,7 @@ namespace Kilim.Game
             { "Her yıldız bir ilmek kazandırır. İlmeklerle evi, bağ evini, yaylayı… yeniden canlandır.", "Every star earns a knot. Use knots to bring the house, the vineyard, the highlands… back to life." },
             { "Geç", "Skip" }, { "İleri", "Next" }, { "Başla", "Start" }, { "On yıl", "Decade" }, { "Yıl", "Year" }, { "{0}'ler", "{0}s" },
             { "Deneyimini yaşına göre ayarlamak için doğum yılını seç. Bu bilgi yalnızca cihazında saklanır.", "Select your birth year so we can tailor the experience. It's stored only on your device." },
-            { "Kolay mod (desen ipucu hep tahtada)", "Easy mode (pattern hints always on the board)" }, { "Hikâyeyi yeniden izle", "Watch the story again" },
+            { "Kolay mod (ipucu hep tahtada, tıkanınca son hamle geri alınır)", "Easy mode (hints always on the board, last move undone when stuck)" }, { "Hikâyeyi yeniden izle", "Watch the story again" },
             { "Nine'nin Evi", "Grandma's House" }, { "Bağ Evi", "Vineyard House" }, { "Yayla Evi", "Highland House" }, { "Kasaba Konağı", "Town Mansion" },
             { "Devam", "Continue" }, { "Tamam", "OK" }, { "Kapat", "Close" }, { "Vazgeç", "Cancel" }, { "Sil", "Delete" },
             { "Harika", "Great" }, { "Anladım", "Got it" }, { "Oyna", "Play" }, { "İptal", "Cancel" }, { "Geri dön", "Go back" },
@@ -239,7 +239,7 @@ namespace Kilim.Game
             { "Güzel olmuş", "Looks lovely" }, { "Stil seç", "Choose a style" }, { "Sonra ücretsiz değiştirebilirsin.", "You can change it later for free." },
 
             // Ayarlar
-            { "Bildirimler", "Notifications" }, { "İpucu", "Hint" }, { "İpucu için {0} coin gerekli.", "You need {0} coins for a hint." },
+            { "Bildirimler", "Notifications" }, { "İpucu", "Hint" }, { "Dokun → döner ↻", "Tap → rotate ↻" }, { "Tezgâh tıkandı, son parçayı geri aldık. Parçaya dokunup döndürmeyi dene!", "The loom got stuck, we undid your last piece. Tap a piece to rotate it!" }, { "İpucu için {0} coin gerekli.", "You need {0} coins for a hint." },
             { "Önce bir hamleyi geri al, sonra ipucu iste.", "Undo a move first, then ask for a hint." }, { "Parlayan parçayı işaretli yere koy (gerekirse döndür).", "Place the glowing piece on the marked spot (rotate if needed)." }, { "Can, günlük desen ve yarış hatırlatmaları", "Lives, daily pattern and race reminders" },
             { "Canların doldu!", "Your lives are full!" }, { "Nine tezgâhta seni bekliyor, bir kilim daha dokuyalım.", "Grandma is waiting at the loom — let's weave another kilim." },
             { "Günün deseni hazır", "Today's pattern is ready" }, { "Bugünün kilim deseni seni bekliyor.", "Today's kilim pattern is waiting for you." },

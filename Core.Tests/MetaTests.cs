@@ -378,6 +378,16 @@ namespace Kilim.Core.Tests
             Assert.True(anchorPiece != null && mv.Cells.Count == anchorPiece.Shape.Cells.Count, "parça boyu tutuyor");
         }
 
+        [Test("STUCK-01")]
+        public static void EarlyLevelsAndEasyModeAutoUndoInsteadOfFail()
+        {
+            var m = NewMeta();
+            Assert.True(m.StartLevel(Region1[1]).Session.AutoUndoOnStuck, "öğrenme bölümü");
+            Assert.True(!m.StartLevel(Region1[11]).Session.AutoUndoOnStuck, "normal bölüm");
+            m.Profile.EasyMode = true;
+            Assert.True(m.StartLevel(Region1[11]).Session.AutoUndoOnStuck, "kolay mod");
+        }
+
         [Test("LIFE-01")]
         public static void LivesConsumeOnStartRefundOnWinRegenHourly()
         {

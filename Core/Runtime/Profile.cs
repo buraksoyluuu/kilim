@@ -33,7 +33,7 @@ namespace Kilim.Core
         public int ConsecutiveFails;
 
         // Ayarlar
-        public bool Music = true, Sfx = true, Haptics = true, LeftHanded, DailyNotification, Notifications = true, NotifAsked;
+        public bool Music = true, Sfx = true, Haptics = true, LeftHanded, DailyNotification, Notifications = true, NotifAsked, RotateLearned;
         /// <summary>Kolay mod: desen ipucu her bölümde tahtada (HintPolicy).</summary>
         public bool EasyMode;
         /// <summary>Can sayısı ve yenilenme sayacının başladığı an (UTC tick, 0 = dolu).</summary>
@@ -110,7 +110,7 @@ namespace Kilim.Core
                 { "attempts", Attempts.ToDictionary(k => k.Key.ToString(), k => (object)k.Value) },
                 { "undoGift", FreeUndoGiftGiven.Cast<object>().ToList() }, { "consecFails", ConsecutiveFails },
                 { "music", Music }, { "sfx", Sfx }, { "haptics", Haptics }, { "leftHanded", LeftHanded },
-                { "dailyNotif", DailyNotification }, { "notif", Notifications }, { "notifAsked", NotifAsked }, { "lang", Language },
+                { "dailyNotif", DailyNotification }, { "notif", Notifications }, { "notifAsked", NotifAsked }, { "rotLearned", RotateLearned }, { "lang", Language },
                 { "easy", EasyMode }, { "lives", Lives }, { "livesSince", LivesSinceUtc }, { "intro", IntroSeen }, { "housesIntro", HousesIntroduced.Cast<object>().ToList() },
                 { "noAds", NoAds }, { "noAdsUntil", NoAdsUntilMs }, { "lastPurchase", LastPurchaseMs },
                 { "lastInter", LastInterstitialMs }, { "levelsSinceInter", LevelsSinceInterstitial },
@@ -160,7 +160,7 @@ namespace Kilim.Core
                 ConsecutiveFails = Data.Int(d, "consecFails"),
                 Music = Data.Bool(d, "music", true), Sfx = Data.Bool(d, "sfx", true),
                 Haptics = Data.Bool(d, "haptics", true), LeftHanded = Data.Bool(d, "leftHanded"),
-                DailyNotification = Data.Bool(d, "dailyNotif"), Notifications = Data.Bool(d, "notif", true), NotifAsked = Data.Bool(d, "notifAsked"), Language = Data.Str(d, "lang", "tr"),
+                DailyNotification = Data.Bool(d, "dailyNotif"), Notifications = Data.Bool(d, "notif", true), NotifAsked = Data.Bool(d, "notifAsked"), RotateLearned = Data.Bool(d, "rotLearned"), Language = Data.Str(d, "lang", "tr"),
                 EasyMode = Data.Bool(d, "easy"), Lives = Data.Int(d, "lives", 3), LivesSinceUtc = Data.Long(d, "livesSince"), IntroSeen = Data.Bool(d, "intro"),
                 NoAds = Data.Bool(d, "noAds"), NoAdsUntilMs = Data.Long(d, "noAdsUntil"),
                 LastPurchaseMs = Data.Long(d, "lastPurchase"), LastInterstitialMs = Data.Long(d, "lastInter"),

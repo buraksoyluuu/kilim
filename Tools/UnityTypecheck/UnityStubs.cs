@@ -246,7 +246,7 @@ namespace UnityEngine.UI
     }
     public sealed class VerticalLayoutGroup : HorizontalOrVerticalLayoutGroup { }
     public sealed class HorizontalLayoutGroup : HorizontalOrVerticalLayoutGroup { }
-    public sealed class LayoutElement : UIBehaviour { public float preferredWidth, preferredHeight, flexibleWidth, flexibleHeight; }
+    public sealed class LayoutElement : UIBehaviour { public float preferredWidth, preferredHeight, flexibleWidth, flexibleHeight; public bool ignoreLayout; }
     public sealed class ContentSizeFitter : UIBehaviour
     {
         public enum FitMode { Unconstrained, MinSize, PreferredSize }
