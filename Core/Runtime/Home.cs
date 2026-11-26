@@ -159,7 +159,8 @@ namespace Kilim.Core
             int houseIndex = _built++;
             for (int i = 0; i < tasks.Length; i++)
             {
-                tasks[i].Cost = houseIndex + 1 + Math.Min(tasks[i].Cost, 2);
+                // İlk alan (4 görev) ucuz: hızlı bağlanma. Sonrası ev başına artar: 3–4, 4–5, 5–6, 6–7.
+                tasks[i].Cost = houseIndex == 0 && i < 4 ? Math.Min(tasks[i].Cost, 2) : 3 + houseIndex + (Math.Min(tasks[i].Cost, 2) - 1);
                 tasks[i].House = id;
                 tasks[i].Area = areas[i / 4];
                 house.Tasks.Add(tasks[i]);

@@ -88,7 +88,11 @@ namespace Kilim.Game
                 if (_r.IsReplay) Ui.Label(card, "Tekrar oynamada coin yarı, ilmek yalnızca yeni yıldız için.", 28, Theme.Muted);
                 if (_r.Piggy > 0) Ui.Label(card, $"Kumbaraya +{_r.Piggy}", 32, Theme.Muted);
                 if (_r.RaceFlag) Ui.Label(card, "Tezgâh Yarışı: +1 bayrak", 32, Theme.Ok);
-                if (_r.PassLevelAfter > _r.PassLevelBefore) Ui.Label(card, $"Sezon kartı seviye {_r.PassLevelAfter}!", 32, Theme.Ok);
+                if (_r.PassLevelAfter > _r.PassLevelBefore)
+                {
+                    var nb = Ui.Button(card, $"YENİ ÖDÜL · Sezon kartı seviye {_r.PassLevelAfter} ›", () => app.Nav.Show(new PassScreen()), Theme.Ok, Color.white, 70, 30);
+                    Fx.Pulse(nb.targetGraphic, Theme.Ok, Theme.WithAlpha(Theme.Gold, 0.9f), 1.2f);
+                }
                 Fx.PopIn(card, 0.4f, 1.0f);
 
                 if (_r.UnlocksNext.HasValue) Unlock(v, Art.Icon(_r.UnlocksNext.Value == Booster.Undo ? "undo" : _r.UnlocksNext.Value == Booster.Swap ? "swap" : "stitch"),

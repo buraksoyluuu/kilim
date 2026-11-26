@@ -27,8 +27,8 @@ namespace Kilim.Core
     /// </summary>
     public static class HintPolicy
     {
-        public const int GlyphFrom = 9;
-        public const int NoneFrom = 25;
+        public const int GlyphFrom = 16;
+        public const int NoneFrom = 31;
 
         public static HintLevel For(int levelId, bool easyMode, bool daily)
         {

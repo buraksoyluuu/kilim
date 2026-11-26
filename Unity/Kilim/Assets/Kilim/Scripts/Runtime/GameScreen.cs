@@ -72,7 +72,7 @@ namespace Kilim.Game
             // Uzun telefonlar (iPhone 1170×2532 → ~2340 birim): fazla yükseklik tezgâha gider, parçalar irileşir.
             float extra = Mathf.Clamp(1080f * Screen.height / Mathf.Max(1, Screen.width) - 2000f, 0, 420);
             // 4 yuva + 3 boşluk ekran genişliğine (1080) sığmalı; uzun telefonda yükseklik kazancı genişliği aşmasın.
-            _traySize = Mathf.Min(228 + extra * 0.4f, (1080f - 48f - 3 * 14f) / GameSession.TraySlots);
+            _traySize = Mathf.Min(228 + extra * 0.4f, (1080f - 120f - 3 * 14f) / GameSession.TraySlots);
             _trayRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, _traySize + 8, "Tray");
             _bonusRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, 120, "Bonus");
             _boosterRow = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 160, "Boosters");
@@ -129,12 +129,7 @@ namespace Kilim.Game
             _percent = Ui.Label(barRow, "%0", 34, Theme.Ink, TextAnchor.MiddleRight, true);
             Ui.Size(_percent.gameObject, 104, 70);
 
-            if (_hint == HintLevel.Full)
-            {
-                var spacer = Ui.Rect(top, "Balance");
-                Ui.Size(spacer.gameObject, 112, 112, 0);
-            }
-            else PatternCard(top, 124);
+            PatternCard(top, 124);   // her modda: kolay modda da referans kaybolmasın
         }
 
         private static Text Marker(RectTransform holder, float t, string label)
@@ -476,7 +471,7 @@ namespace Kilim.Game
             {
                 // Değiştir kayıp anında da (kurtarma) çalışır.
                 if (S.State == SessionState.Won || App.Nav.HasModal || S.Tray[slot] == null) return;
-                if (slot >= GameSession.TraySlots) { App.Nav.Toast("Tek İlmek değiştirilemez."); return; }
+                if (slot >= GameSession.TraySlots) { App.Nav.Toast("Yama değiştirilemez."); return; }
                 ExitSwapMode();
                 UseBooster(Booster.Swap, slot);
                 _slots[slot].PopIn();
@@ -578,14 +573,14 @@ namespace Kilim.Game
             if (_run.IsDaily) return; // zen modunda güçlendirici yok
             BoosterButton(Booster.Undo, "Geri Al", "undo");
             BoosterButton(Booster.Swap, _swapMode ? "Vazgeç" : "Değiştir", "swap");
-            BoosterButton(Booster.SingleStitch, "Tek İlmek", "stitch");
+            BoosterButton(Booster.SingleStitch, "Yama", "stitch");
             HintButton();
             _boosterRow.gameObject.SetActive(_boosterRow.childCount > 0);
         }
 
         private void HintButton()
         {
-            var btn = Ui.Button(_boosterRow, "", OnHintTap, Theme.Panel, Theme.Ink, 156, 30);
+            var btn = Ui.Button(_boosterRow, "", OnHintTap, Theme.Panel, Theme.Ink, 140, 30);
             var label = Ui.ButtonLabel(btn);
             label.text = "";
             var inner = Ui.VStack(btn.transform, 2, 6, TextAnchor.MiddleCenter);
@@ -604,7 +599,7 @@ namespace Kilim.Game
             if (!unlocked) return;
             bool active = b == Booster.Swap && _swapMode;
             var bg = active ? Theme.Gold : unlocked ? Theme.Panel : Theme.Neutral;
-            var btn = Ui.Button(_boosterRow, "", () => OnBoosterTap(b), bg, Theme.Ink, 156, 30);
+            var btn = Ui.Button(_boosterRow, "", () => OnBoosterTap(b), bg, Theme.Ink, 140, 30);
             var label = Ui.ButtonLabel(btn);
             var inner = Ui.VStack(btn.transform, 2, 6, TextAnchor.MiddleCenter);
             inner.Stretch(8, 8, 8, 14);
@@ -618,7 +613,7 @@ namespace Kilim.Game
                 return;
             }
             if (w.BoosterCount(b) > 0) Ui.Badge(btn.transform, w.BoosterCount(b).ToString(), Theme.Ok);
-            else Ui.Badge(btn.transform, $"●{cfg.BoosterPrice[b]}", Theme.Gold);
+            else Ui.Badge(btn.transform, $"●{cfg.BoosterPrice[b]}", Theme.Ink);   // açık zeminde okunur
             bool applicable = active || _boosters.IsApplicable(S, b, FirstOccupiedSlot()) || b == Booster.Swap && S.RemainingInQueue > 0;
             bool live = S.State == SessionState.Playing || S.State == SessionState.Failed && _swapMode;
             Ui.SetEnabled(btn, applicable && live);
@@ -665,7 +660,7 @@ namespace Kilim.Game
             Refresh();
         }
 
-        public static string BoosterName(Booster b) => b == Booster.Undo ? "Geri Al" : b == Booster.Swap ? "Değiştir" : "Tek İlmek";
+        public static string BoosterName(Booster b) => b == Booster.Undo ? "Geri Al" : b == Booster.Swap ? "Değiştir" : "Yama";
 
         /// <summary>Kayıp kartından kurtarma: güçlendirici uygulanır, oyun kaldığı yerden sürer.</summary>
         public void Rescue(Booster b)
@@ -858,11 +853,11 @@ namespace Kilim.Game
                 {
                     string what = kv.Key == Booster.Undo ? "Son yerleşimi geri alır. Tezgâh dolduğunda da kurtarır."
                         : kv.Key == Booster.Swap ? "Seçtiğin parçayı kuyruğun sonuna gönderir, yerine sıradaki gelir."
-                        : "Tezgâha 1 hücrelik ek parça koyar: kalan boşlukları kapatır (desen yüzdesini düşürür).";
+                        : "Yama: tek bir boş kareyi kapatır. Hiçbir parça sığmadığında kalan deliği yamala.";
                     NewThing($"Yeni: {BoosterName(kv.Key)}", $"{what}\n3 tane hediye!", Art.Icon(kv.Key == Booster.Undo ? "undo" : kv.Key == Booster.Swap ? "swap" : "stitch"));
                 }
             if (!App.Profile.EasyMode && L.Id == HintPolicy.GlyphFrom)
-                NewThing("Usta dokumacı", "Tahtada artık renkler yok, yalnızca şekiller. Renkleri sağ üstteki desen kartından oku.", Art.Icon("pattern"));
+                NewThing("Usta dokumacı", "Tahtada renkler soldu, motifler duruyor. Renkleri sağ üstteki desen kartından oku. Bu bölümde can harcanmaz!", Art.Icon("pattern"));
             if (!App.Profile.EasyMode && L.Id == HintPolicy.NoneFrom)
                 NewThing("Ezbere dokuma", "Bundan sonra tahta boş. Desen kartına bak, deseni aklında tut ve doku!\n(Ayarlar › Kolay mod ipuçlarını geri getirir.)", Art.Icon("pattern"));
         }
@@ -913,7 +908,10 @@ namespace Kilim.Game
             Ui.Clear(_content);
             var p = _game.PieceAt(_slot);
             if (p == null || _dragging) { _last = p; return; }
-            float cell = Mathf.Min((_size - 28) / Mathf.Max(p.Shape.Width, p.Shape.Height), _size / 3.4f);
+            // Yerleşim yuvayı daralttıysa gerçek genişlik esas: parça asla yuvadan taşmaz.
+            float w = ((RectTransform)transform).rect.width;
+            float size = w > 1 ? Mathf.Min(_size, w) : _size;
+            float cell = Mathf.Min((size - 28) / Mathf.Max(p.Shape.Width, p.Shape.Height), size / 3.4f);
             PieceRenderer.Draw(_content, p.Shape, p.Color, cell, cell * 0.08f);
             if (_last != null && !ReferenceEquals(_last, p)) PopIn(); // yeni gelen parça
             _last = p;

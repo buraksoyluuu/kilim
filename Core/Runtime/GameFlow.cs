@@ -172,7 +172,7 @@ namespace Kilim.Core
         public bool GiveUp(LevelRun run)
         {
             if (run.IsDaily) return false;
-            if (run.Level.Id <= Config.Lives.FreeUntilLevel) Lives.Refund();   // öğrenme döneminde kayıp can götürmez
+            if (run.Level.Id <= Config.Lives.FreeUntilLevel || run.Level.Id == HintPolicy.GlyphFrom || run.Level.Id == HintPolicy.NoneFrom) Lives.Refund();   // öğrenme + mod geçiş bölümleri   // öğrenme döneminde kayıp can götürmez
             Profile.ConsecutiveFails++;
             if (Profile.ConsecutiveFails >= 3 && !Profile.FreeUndoGiftGiven.Contains(run.Level.Id)
                 && Wallet.IsUnlocked(Booster.Undo))

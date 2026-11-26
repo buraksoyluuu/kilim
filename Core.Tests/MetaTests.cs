@@ -276,7 +276,7 @@ namespace Kilim.Core.Tests
         [Test("META-01..META-05")]
         public static void HomeTasksCostAndOrder()
         {
-            Assert.Equal(56, Home.TotalCost);   // ev 1: 2–3 ilmek
+            Assert.Equal(68, Home.TotalCost);   // ev 1: ilk alan 1–2, sonra 3–4 ilmek
             Assert.Equal(20, Home.Region1.Count);
             var m = NewMeta();
             var first = Home.NextTask(m.Profile);

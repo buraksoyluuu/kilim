@@ -41,7 +41,9 @@ namespace Kilim.Game
             Tile(row, "daily", "Günlük", dailyDone ? $"Seri {m.Daily.CurrentStreak(p)} ✓" : "Yeni desen!", () => app.Nav.Show(new DailyScreen()), !dailyDone);
             var race = Tile(row, "race", "Yarış", "", () => app.Nav.Show(new RaceScreen()), false);
             _raceTimer = race;
-            Tile(row, "pass", "Sezon", $"Seviye {m.Pass.Level(p)}", () => app.Nav.Show(new PassScreen()), false);
+            bool passReady = false;
+            for (int l = 1; l <= m.Pass.Level(p) && !passReady; l++) passReady = m.Pass.CanClaim(p, l, false) || (p.GoldPass && m.Pass.CanClaim(p, l, true));
+            Tile(row, "pass", "Sezon", $"Seviye {m.Pass.Level(p)}", () => app.Nav.Show(new PassScreen()), passReady);
             bool piggyFull = m.Wallet.Piggy >= app.Config.Economy.PiggyCap;
             Tile(row, "piggy", "Kumbara", piggyFull ? "Dolu!" : Fmt.N(m.Wallet.Piggy), () => app.Nav.Show(new PiggyScreen()), piggyFull);
 

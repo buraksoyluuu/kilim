@@ -69,7 +69,7 @@ namespace UnityEngine
     {
         public Rect(float x, float y, float w, float h) { xMin = x; yMin = y; xMax = x + w; yMax = y + h; }
         public float xMin, yMin, xMax, yMax;
-        public Vector2 size => default;
+        public Vector2 size => default; public float width => xMax - xMin; public float height => yMax - yMin;
         public static bool operator ==(Rect a, Rect b) => true;
         public static bool operator !=(Rect a, Rect b) => false;
         public override bool Equals(object o) => true;
