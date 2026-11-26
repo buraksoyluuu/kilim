@@ -1,0 +1,21 @@
+name: aab-drop
+# Bir beta derlemesinin AAB'sini geçici "aab-drop" dalına koyar (Play Console'a tarayıcıdan yüklemek için).
+on:
+  workflow_dispatch:
+    inputs:
+      run_id: { description: "beta.yml run id", required: true }
+permissions:
+  contents: write
+  actions: read
+jobs:
+  drop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: kilim-android-aab, run-id: "${{ inputs.run_id }}", github-token: "${{ github.token }}", path: aab }
+      - run: |
+          cd aab && f=$(ls *.aab | head -1) && mv "$f" kilim.aab
+          git init -q && git checkout -q -b aab-drop
+          git -c user.name=ci -c user.email=ci@kilim add kilim.aab
+          git -c user.name=ci -c user.email=ci@kilim commit -qm "AAB ${{ inputs.run_id }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" aab-drop
