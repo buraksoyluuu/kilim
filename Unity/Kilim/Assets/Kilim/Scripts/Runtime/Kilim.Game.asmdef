@@ -1,6 +1,12 @@
 {
-  "name": "Kilim.Game",
-  "rootNamespace": "Kilim.Game",
-  "references": ["Kilim.Core"],
-  "autoReferenced": true
+    "name": "Kilim.Game",
+    "rootNamespace": "Kilim.Game",
+    "references": [
+        "Kilim.Core",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Stores",
+        "UnityEngine.Purchasing.Common",
+        "Unity.Services.Core"
+    ],
+    "autoReferenced": true
 }
