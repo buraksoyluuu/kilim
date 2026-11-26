@@ -49,7 +49,7 @@ jobs:
     steps:
       - name: Bu tür gerekli mi?
         id: want
-        run: echo "go=$([ '${{ matrix.kind }}' = apk ] || [ '${{ needs.meta.outputs.play }}' = true ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+        run: echo "go=true" >> "$GITHUB_OUTPUT"   # AAB her zaman: Play'e elle/otomatik yükleme için
       - if: steps.want.outputs.go == 'true'
         uses: jlumbroso/free-disk-space@v1.3.1
         with: { tool-cache: false, android: true, large-packages: false }
@@ -99,8 +99,11 @@ jobs:
       - if: steps.want.outputs.go == 'true' && matrix.kind == 'apk'
         uses: actions/upload-artifact@v4
         with: { name: kilim-android-apk, path: build/Android/*.apk, retention-days: 30 }
+      - if: matrix.kind == 'aab'
+        uses: actions/upload-artifact@v4
+        with: { name: kilim-android-aab, path: build/Android/*.aab, retention-days: 30 }
       - name: Google Play internal test
-        if: steps.want.outputs.go == 'true' && matrix.kind == 'aab'
+        if: matrix.kind == 'aab' && needs.meta.outputs.play == 'true'
         env: { GOOGLE_PLAY_JSON: "${{ secrets.GOOGLE_PLAY_JSON }}" }
         run: |
           gem install fastlane --no-document
