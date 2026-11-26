@@ -14,7 +14,7 @@ namespace Kilim.Game
     /// </summary>
     public sealed class HomeScreen : UiScreen
     {
-        private Text _starterTimer, _raceTimer;
+        private Text _starterTimer, _raceTimer, _lives;
 
         public override void Build(RectTransform root)
         {
@@ -28,6 +28,7 @@ namespace Kilim.Game
 
             var top = Ui.HStack(v, 16, 0, TextAnchor.MiddleLeft, 96);
             top.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
+            _lives = LivesModal.Pill(top, app);
             Ui.CoinPill(top, app);
             Ui.IlmekPill(top, app);
             var gap = Ui.Rect(top, "Gap");
@@ -177,6 +178,7 @@ namespace Kilim.Game
         {
             var m = App.Meta;
             if (_starterTimer != null) _starterTimer.text = Loc.T($"Kalan {Fmt.Span(m.Starter.Remaining(App.Profile))}");
+            if (_lives != null) LivesModal.PillText(_lives, App);
             if (_raceTimer != null) _raceTimer.text = Loc.T(m.Race.IsActive ? Fmt.Span(m.Race.Remaining) : "Cuma");
         }
     }
@@ -490,5 +492,76 @@ namespace Kilim.Game
         }
 
         public override bool OnBack() { App.GoHome(); return true; }
+    }
+
+    /// <summary>
+    /// Can kutusu ve "Canların bitti" penceresi. Can her saat 1 yenilenir (3 saatte tam). Hemen oynamak için:
+    /// coin ile doldur, satın al ya da reklam izleyip +1 can.
+    /// </summary>
+    public static class LivesModal
+    {
+        public static Text Pill(Transform parent, App app)
+        {
+            var t = Ui.Pill(parent, Art.Icon("heart"), "", 210, 86);
+            var pill = t.transform.parent;
+            foreach (var i in pill.GetComponentsInChildren<Image>()) if (i.sprite == Art.Icon("heart")) i.color = Theme.Primary;
+            PillText(t, app);
+            var b = pill.gameObject.AddComponent<Button>();
+            b.targetGraphic = pill.GetComponent<Image>();
+            pill.gameObject.AddComponent<PressFx>();
+            b.onClick.AddListener(() => { Audio.Click(); Show(app, null); });
+            return t;
+        }
+
+        public static void PillText(Text t, App app)
+        {
+            var l = app.Meta.Lives;
+            int n = l.Count;
+            bool full = n >= l.Config.Max;
+            t.text = full ? $"{n}" : $"{n} · {Clock(l.NextIn)}";
+            t.fontSize = full ? 40 : 28;
+        }
+
+        private static string Clock(System.TimeSpan s) =>
+            s.TotalHours >= 1 ? $"{(int)s.TotalHours}:{s.Minutes:00}:{s.Seconds:00}" : $"{s.Minutes:00}:{s.Seconds:00}";
+
+        public static void Show(App app, System.Action thenPlay)
+        {
+            var l = app.Meta.Lives;
+            var card = app.Nav.Modal(dimTapCloses: true);
+            var hearts = Ui.HStack(card, 14, 0, TextAnchor.MiddleCenter, 130);
+            hearts.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
+            for (int i = 0; i < l.Config.Max; i++)
+            {
+                var h = Ui.Icon(hearts, Art.Icon("heart"), 110, i < l.Count ? Theme.Primary : Theme.Neutral);
+                Ui.Size(h.gameObject, 110, 110, 0);
+                Fx.PopIn(h.transform, 0.35f, 0.08f * i);
+            }
+            bool empty = l.Count == 0;
+            Ui.Label(card, empty ? "Canların bitti" : $"{l.Count} canın var", 56, Theme.Ink, TextAnchor.MiddleCenter, true);
+            var timer = Ui.Label(card, "", 36, Theme.Muted);
+            void Tick()
+            {
+                if (timer == null) return;
+                timer.text = l.IsFull ? Loc.T("Canların dolu. Kazandığın bölümde can harcanmaz.")
+                    : Loc.T($"Sonraki can: {Clock(l.NextIn)} · Hepsi: {Clock(l.FullIn)}");
+                if (thenPlay != null && empty && l.CanPlay) { app.Nav.Close(card); thenPlay(); return; }
+                app.Delay(1f, Tick);
+            }
+            Tick();
+            if (!l.IsFull)
+            {
+                var w = app.Meta.Wallet;
+                bool coinsOk = w.Coins >= l.Config.RefillCoins;
+                void Done() { app.Save(); app.Nav.Close(card); Audio.Play("unlock"); if (thenPlay != null) thenPlay(); else app.Nav.Toast("Canlar doldu!"); }
+                if (coinsOk)
+                    Ui.Button(card, $"Hepsini doldur · ● {Fmt.N(l.Config.RefillCoins)}", () => { if (l.TryRefillWithCoins(w)) Done(); }, Theme.Primary, Color.white, 120, 40);
+                Ui.Button(card, $"Hepsini doldur · {app.Iap.LocalizedPrice(Skus.Lives)}", () => app.Buy(Skus.Lives, "lives", Done),
+                    coinsOk ? Theme.Panel : Theme.Primary, coinsOk ? Theme.Ink : Color.white, 120, 40);
+                if (app.Ads.RewardedReady)
+                    Ui.Button(card, "Reklam izle · +1 can", () => app.ShowRewarded("lives", () => { l.Add(1); Done(); }), Theme.Gold, Theme.Ink, 120, 38);
+            }
+            Ui.Button(card, "Tamam", () => app.Nav.Close(card), Theme.Neutral, Theme.Ink);
+        }
     }
 }

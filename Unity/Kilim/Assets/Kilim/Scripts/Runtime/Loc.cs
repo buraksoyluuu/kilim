@@ -77,6 +77,10 @@ namespace Kilim.Game
         {
             // Genel
             // v0.5: his, harita, ev, tanıtım
+            { "Canların bitti", "Out of lives" }, { "{0} canın var", "You have {0} lives" }, { "Canlar doldu!", "Lives refilled!" },
+            { "Canların dolu. Kazandığın bölümde can harcanmaz.", "Lives are full. Winning a level doesn't cost a life." },
+            { "Sonraki can: {0} · Hepsi: {1}", "Next life: {0} · All: {1}" }, { "Hepsini doldur · ● {0}", "Refill all · ● {0}" },
+            { "Hepsini doldur · {0}", "Refill all · {0}" }, { "Reklam izle · +1 can", "Watch ad · +1 life" },
             { "Kalan {0} parça", "{0} pieces left" }, { "Parça kalmadı", "No pieces left" }, { "Desen kartı", "Pattern card" },
             { "Güzel!", "Nice!" }, { "Harika!", "Great!" }, { "Usta işi!", "Masterful!" }, { "Yeni rekor!", "New record!" },
             { "Tahtada artık ipucu yok. Parçaları bu desene göre yerleştir; eşleşen her hücre yıldıza yaklaştırır.", "No more hints on the board. Place pieces following this pattern; every matching cell gets you closer to a star." },

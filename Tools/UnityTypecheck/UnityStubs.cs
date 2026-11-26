@@ -20,6 +20,7 @@ namespace UnityEngine
         public Transform transform => null;
         public T GetComponent<T>() => default;
         public T GetComponentInChildren<T>() => default;
+        public T[] GetComponentsInChildren<T>() => null;
     }
     public class Behaviour : Component { public bool enabled; }
     public sealed class CanvasGroup : Behaviour { public float alpha = 1; public bool interactable, blocksRaycasts; }

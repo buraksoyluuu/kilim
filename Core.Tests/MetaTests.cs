@@ -348,6 +348,46 @@ namespace Kilim.Core.Tests
             Assert.True(q.HousesIntroduced.Contains("bag"));
         }
 
+        [Test("LIFE-01")]
+        public static void LivesConsumeOnStartRefundOnWinRegenHourly()
+        {
+            var m = NewMeta();
+            var clock = (ManualClock)m.Clock;
+            Assert.Equal(3, m.Lives.Count);
+            var run = m.StartLevel(Region1[0]);
+            Assert.Equal(2, m.Lives.Count, "başlarken 1 can");
+            m.GiveUp(run);
+            Assert.Equal(2, m.Lives.Count, "pes etmek ek can yakmaz");
+            m.StartLevel(Region1[0]); m.StartLevel(Region1[0]);
+            Assert.Equal(0, m.Lives.Count);
+            Assert.False(m.Lives.CanPlay);
+            Assert.True(m.Lives.FullIn.TotalMinutes > 179 && m.Lives.FullIn.TotalMinutes <= 180, "3 saatte dolar");
+            clock.Advance(System.TimeSpan.FromMinutes(61));
+            Assert.Equal(1, m.Lives.Count, "1 saatte 1 can");
+            clock.Advance(System.TimeSpan.FromHours(5));
+            Assert.Equal(3, m.Lives.Count, "üst sınır 3");
+            m.CompleteWin(WinLevel(m, Region1[0]));
+            Assert.Equal(3, m.Lives.Count, "kazanınca iade");
+        }
+
+        [Test("LIFE-02")]
+        public static void LivesRefillAndClockRollback()
+        {
+            var m = NewMeta();
+            var clock = (ManualClock)m.Clock;
+            m.StartLevel(Region1[0]); m.StartLevel(Region1[0]); m.StartLevel(Region1[0]);
+            m.Wallet.AddCoins(1000);
+            Assert.True(m.Lives.TryRefillWithCoins(m.Wallet));
+            Assert.Equal(3, m.Lives.Count);
+            m.StartLevel(Region1[0]);
+            clock.Advance(System.TimeSpan.FromHours(-10)); // saat geri alındı
+            Assert.Equal(2, m.Lives.Count, "geri saat can vermez");
+            Assert.Equal(PurchaseOutcome.Granted, m.ApplyPurchase(Skus.Lives, "tx-l1"));
+            Assert.Equal(3, m.Lives.Count);
+            var p = PlayerProfile.FromJson(m.Profile.ToJson());
+            Assert.Equal(3, p.Lives);
+        }
+
         [Test("FAIL-09")]
         public static void ThirdConsecutiveGiveUpGiftsUndoOnce()
         {

@@ -36,6 +36,9 @@ namespace Kilim.Core
         public bool Music = true, Sfx = true, Haptics = true, LeftHanded, DailyNotification;
         /// <summary>Kolay mod: desen ipucu her bölümde tahtada (HintPolicy).</summary>
         public bool EasyMode;
+        /// <summary>Can sayısı ve yenilenme sayacının başladığı an (UTC tick, 0 = dolu).</summary>
+        public int Lives = 3;
+        public long LivesSinceUtc;
         /// <summary>Tanıtım hikâyesi görüldü.</summary>
         public bool IntroSeen;
         /// <summary>Açılan mekânların giriş kartı gösterildi (House.Id).</summary>
@@ -108,7 +111,7 @@ namespace Kilim.Core
                 { "undoGift", FreeUndoGiftGiven.Cast<object>().ToList() }, { "consecFails", ConsecutiveFails },
                 { "music", Music }, { "sfx", Sfx }, { "haptics", Haptics }, { "leftHanded", LeftHanded },
                 { "dailyNotif", DailyNotification }, { "lang", Language },
-                { "easy", EasyMode }, { "intro", IntroSeen }, { "housesIntro", HousesIntroduced.Cast<object>().ToList() },
+                { "easy", EasyMode }, { "lives", Lives }, { "livesSince", LivesSinceUtc }, { "intro", IntroSeen }, { "housesIntro", HousesIntroduced.Cast<object>().ToList() },
                 { "noAds", NoAds }, { "noAdsUntil", NoAdsUntilMs }, { "lastPurchase", LastPurchaseMs },
                 { "lastInter", LastInterstitialMs }, { "levelsSinceInter", LevelsSinceInterstitial },
                 { "interCount", InterstitialCount }, { "noAdsOfferShown", NoAdsOfferShown },
@@ -158,7 +161,7 @@ namespace Kilim.Core
                 Music = Data.Bool(d, "music", true), Sfx = Data.Bool(d, "sfx", true),
                 Haptics = Data.Bool(d, "haptics", true), LeftHanded = Data.Bool(d, "leftHanded"),
                 DailyNotification = Data.Bool(d, "dailyNotif"), Language = Data.Str(d, "lang", "tr"),
-                EasyMode = Data.Bool(d, "easy"), IntroSeen = Data.Bool(d, "intro"),
+                EasyMode = Data.Bool(d, "easy"), Lives = Data.Int(d, "lives", 3), LivesSinceUtc = Data.Long(d, "livesSince"), IntroSeen = Data.Bool(d, "intro"),
                 NoAds = Data.Bool(d, "noAds"), NoAdsUntilMs = Data.Long(d, "noAdsUntil"),
                 LastPurchaseMs = Data.Long(d, "lastPurchase"), LastInterstitialMs = Data.Long(d, "lastInter"),
                 LevelsSinceInterstitial = Data.Int(d, "levelsSinceInter"), InterstitialCount = Data.Int(d, "interCount"),

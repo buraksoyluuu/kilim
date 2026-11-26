@@ -8,6 +8,7 @@ namespace Kilim.Core
     public sealed class GameConfig
     {
         public EconomyConfig Economy { get; } = new EconomyConfig();
+        public LivesConfig Lives { get; } = new LivesConfig();
 
         public bool ContinueAdEnabled = true;
         public int InterFromLevel = 12;
@@ -36,6 +37,11 @@ namespace Kilim.Core
             try { d = MiniJson.Parse(json) as Dictionary<string, object>; }
             catch (System.FormatException) { return; }
             if (d == null) return;
+
+            var lv = Lives;
+            lv.Max = Data.Int(d, "lives_max", lv.Max);
+            lv.RegenMinutes = Data.Int(d, "lives_regen_minutes", lv.RegenMinutes);
+            lv.RefillCoins = Data.Int(d, "lives_refill_coins", lv.RefillCoins);
 
             var e = Economy;
             e.WinBase = Data.Int(d, "win_base", e.WinBase);
@@ -73,6 +79,8 @@ namespace Kilim.Core
         public const string Starter = "kilim.starter";
         public const string Piggy = "kilim.piggy";
         public const string GoldPass = "kilim.goldpass";
+        /// <summary>Canları hemen doldur (tüketilebilir).</summary>
+        public const string Lives = "kilim.lives";
 
         public static readonly (string sku, int coins, string usd, string badge)[] CoinPacks =
         {
@@ -94,6 +102,7 @@ namespace Kilim.Core
                 case Starter: return "1,99 $";
                 case Piggy: return "2,99 $";
                 case GoldPass: return "4,99 $";
+                case Lives: return "0,99 $";
                 default: return "";
             }
         }

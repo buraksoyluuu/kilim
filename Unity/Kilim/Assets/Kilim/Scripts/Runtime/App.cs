@@ -184,6 +184,7 @@ namespace Kilim.Game
         {
             var level = Levels.Get(levelId);
             if (level == null) { Nav.Show(new HomeScreen()); return; }
+            if (!Meta.Lives.CanPlay) { LivesModal.Show(this, () => StartLevel(levelId)); return; }
             var run = Meta.StartLevel(level);
             Save();
             Analytics.Track("level_start", ("level", level.Id), ("attempt", run.Attempt), ("region", level.Region));

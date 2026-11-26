@@ -60,12 +60,14 @@ namespace Kilim.Core
         public DailyPattern Daily { get; }
         public Race Race { get; }
         public SeasonPass Pass { get; }
+        public Lives Lives { get; }
 
         public Meta(PlayerProfile profile, GameConfig config, IClock clock)
         {
             Profile = profile;
             Config = config;
             Clock = clock;
+            Lives = new Lives(profile, clock, config.Lives);
             Ads = new AdPolicy(config, clock);
             Starter = new StarterOffer(config, clock);
             Daily = new DailyPattern(config, clock);
@@ -80,6 +82,7 @@ namespace Kilim.Core
         {
             if (!isDaily)
             {
+                Lives.TryConsume(); // can kontrolü uygulama katmanında (CanPlay); burada harcanır
                 Profile.Attempts[level.Id] = Profile.AttemptsOf(level.Id) + 1;
                 Wallet.UnlockBoostersUpTo(level.Id, Config.Economy);
             }
@@ -119,6 +122,7 @@ namespace Kilim.Core
             else
             {
                 r.IsReplay = run.Level.Id < Profile.CurrentLevel;
+                Lives.Refund();
                 r.PreviousBest = Wallet.BestStars(run.Level.Id);
                 var (coins, ilmek, piggy) = Wallet.ApplyWin(run.Level.Id, stars, run.Level.Boss, Config.Economy, r.IsReplay);
                 r.Coins = coins;
@@ -193,6 +197,9 @@ namespace Kilim.Core
             int coins = Skus.CoinsOf(sku);
             switch (sku)
             {
+                case Skus.Lives:
+                    Lives.Refill();
+                    break;
                 case Skus.NoAds:
                     Profile.NoAds = true;
                     Profile.OwnedNonConsumables.Add(sku);
@@ -238,6 +245,9 @@ namespace Kilim.Core
         {
             switch (sku)
             {
+                case Skus.Lives:
+                    Lives.Refill();
+                    break;
                 case Skus.NoAds: Profile.NoAds = false; Profile.OwnedNonConsumables.Remove(sku); break;
                 case Skus.GoldPass: Profile.GoldPass = false; break;
                 case Skus.Starter:

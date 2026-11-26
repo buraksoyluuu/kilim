@@ -184,7 +184,13 @@ def i_lock(d, n):
     d.ellipse([n * 0.44, n * 0.56, n * 0.56, n * 0.68], fill=(0, 0, 0, 0))
 
 
-ICONS = {'pause': i_pause, 'undo': i_undo, 'swap': i_swap, 'stitch': i_stitch, 'pattern': i_pattern,
+def i_heart(d, n):
+    d.ellipse([n * 0.1, n * 0.16, n * 0.54, n * 0.6], fill=W)
+    d.ellipse([n * 0.46, n * 0.16, n * 0.9, n * 0.6], fill=W)
+    d.polygon([(n * 0.12, n * 0.46), (n * 0.88, n * 0.46), (n * 0.5, n * 0.9)], fill=W)
+
+
+ICONS = {'heart': i_heart, 'pause': i_pause, 'undo': i_undo, 'swap': i_swap, 'stitch': i_stitch, 'pattern': i_pattern,
          'settings': i_settings, 'daily': i_daily, 'race': i_race, 'pass': i_pass, 'piggy': i_piggy, 'map': i_map,
          'home': i_home, 'shop': i_shop, 'stuck': i_stuck, 'shield': i_shield, 'replay': i_replay, 'play': i_play}
 

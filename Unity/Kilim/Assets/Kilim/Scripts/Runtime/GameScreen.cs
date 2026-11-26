@@ -52,6 +52,7 @@ namespace Kilim.Game
         public override void Build(RectTransform root)
         {
             _boosters = new BoosterService(App.Meta.Wallet, App.Config.Economy);
+            Audio.Track("music_game");
             _hint = HintPolicy.For(L.Id, App.Profile.EasyMode, _run.IsDaily);
             S.StateChanged += OnState;
             S.AutoUndone += _ => { App.Nav.Toast("Tezgâh doldu, son parça geri alındı."); Refresh(); };
@@ -74,7 +75,11 @@ namespace Kilim.Game
             ShowIntroHints();
         }
 
-        public override void OnClose() => S.StateChanged -= OnState;
+        public override void OnClose()
+        {
+            S.StateChanged -= OnState;
+            Audio.Track("music_menu");
+        }
 
         public override bool OnBack() { Pause(); return true; }
 
@@ -581,7 +586,7 @@ namespace Kilim.Game
             {
                 _ending = true;
                 if (_swapMode) ExitSwapMode();
-                Audio.Play("win");
+                Audio.Stinger("win", 4.2f);
                 Haptic.Success();
                 Refresh();
                 // 9.3 son parça oturunca dokuma dalgası + konfeti, sonra Kazandın
@@ -601,7 +606,7 @@ namespace Kilim.Game
             {
                 if (_swapMode) ExitSwapMode();
                 Refresh();
-                Audio.Play("fail");
+                Audio.Stinger("fail", 3.2f);
                 Haptic.Medium();
                 Fx.Shake(_board, 14, 0.4f);
                 App.Analytics.Track("level_fail", ("level", L.Id), ("attempt", _run.Attempt), ("pieces_left", S.RemainingPieces),

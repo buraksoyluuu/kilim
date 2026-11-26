@@ -97,15 +97,46 @@ namespace Kilim.Game
             if (c != null) _sfx.PlayOneShot(c, volume);
         }
 
+        public const float MusicVolume = 0.38f;
+        private static bool _musicOn = true;
+        private static string _track = "music_menu";
+
+        /// <summary>Müzik açık/kapalı (Ayarlar).</summary>
         public static void SetMusic(bool on)
         {
+            _musicOn = on;
             if (_music == null) return;
-            if (on)
-            {
-                if (_music.clip == null) _music.clip = Clip("music_loop");
-                if (_music.clip != null && !_music.isPlaying) _music.Play();
-            }
+            if (on) Track(_track);
             else _music.Stop();
+        }
+
+        /// <summary>
+        /// Parça değiştir: "music_menu" (Hüseyni, menüler) ya da "music_game" (Hicaz, oyun). Yumuşak geçiş.
+        /// </summary>
+        public static void Track(string name)
+        {
+            _track = name;
+            if (_music == null || !_musicOn) return;
+            var clip = Clip(name);
+            if (clip == null) return;
+            if (_music.clip == clip && _music.isPlaying) { Fx.To(_music, 0.4f, Ease.Linear, k => _music.volume = Mathf.Lerp(_music.volume, MusicVolume, k), null, 0, "vol"); return; }
+            float from = _music.isPlaying ? _music.volume : 0;
+            Fx.To(_music, 0.35f, Ease.Linear, k => _music.volume = from * (1 - k), () =>
+            {
+                _music.clip = clip;
+                _music.volume = 0;
+                _music.Play();
+                Fx.To(_music, 0.8f, Ease.Linear, k => _music.volume = MusicVolume * k, null, 0, "vol");
+            }, 0, "vol");
+        }
+
+        /// <summary>Kazanma/kaybetme ezgisi çalarken müzik kısılır, sonra kendi parçasına döner.</summary>
+        public static void Stinger(string name, float seconds)
+        {
+            Play(name);
+            if (_music == null || !_musicOn || !_music.isPlaying) return;
+            Fx.To(_music, 0.2f, Ease.Linear, k => _music.volume = MusicVolume * (1 - 0.85f * k), null, 0, "vol");
+            Fx.To(_music, 0.8f, Ease.Linear, k => _music.volume = MusicVolume * (0.15f + 0.85f * k), null, seconds, "vol2");
         }
 
         public static void Click() => Play("click", 0.6f);
