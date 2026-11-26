@@ -121,7 +121,7 @@ namespace Kilim.Game
 
         public void Initialize(Action<string, string> onDeferredSuccess) => _deferred = onDeferredSuccess;
 
-        public string LocalizedPrice(string sku) => Skus.UsdPrice(sku);
+        public string LocalizedPrice(string sku) => Skus.FallbackPrice(sku, Region.IsTurkey);
 
         public void Purchase(string sku, Action<IapStatus, string> done)
         {
@@ -184,6 +184,19 @@ namespace Kilim.Game
     // =====================================================================
     // Rıza (UMP / ATT)
     // =====================================================================
+
+    /// <summary>Cihaz bölgesi: Türkiye'de fiyatlar her yerde TL gösterilir.</summary>
+    public static class Region
+    {
+        public static bool IsTurkey
+        {
+            get
+            {
+                try { if (System.Globalization.RegionInfo.CurrentRegion.TwoLetterISORegionName == "TR") return true; } catch { }
+                return Application.systemLanguage == SystemLanguage.Turkish;
+            }
+        }
+    }
 
     public interface IConsentService
     {

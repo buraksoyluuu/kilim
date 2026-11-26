@@ -117,6 +117,17 @@ namespace Kilim.Core
 
         public static bool IsConsumable(string sku) => sku != NoAds && sku != Starter && sku != GoldPass;
 
+        /// <summary>Türkiye fiyatları (App Store/Play'de TUR için elle ayarlı; Tools/asc_iap.py ile aynı).</summary>
+        public static readonly System.Collections.Generic.Dictionary<string, string> TryPrices = new System.Collections.Generic.Dictionary<string, string>
+        {
+            { Coins1, "49,99 ₺" }, { Coins2, "119,99 ₺" }, { Coins3, "229,99 ₺" }, { Coins4, "449,99 ₺" }, { Coins5, "899,99 ₺" },
+            { Lives, "49,99 ₺" }, { Starter, "89,99 ₺" }, { Piggy, "129,99 ₺" }, { NoAds, "229,99 ₺" }, { GoldPass, "229,99 ₺" },
+        };
+
+        /// <summary>Mağaza fiyatı alınamadığında gösterilecek fiyat: Türkiye'de TL, diğer ülkelerde $ (mağaza fiyatı her zaman önceliklidir).</summary>
+        public static string FallbackPrice(string sku, bool turkey) =>
+            turkey && TryPrices.TryGetValue(sku, out var t) ? t : UsdPrice(sku);
+
         public static string UsdPrice(string sku)
         {
             foreach (var p in CoinPacks) if (p.sku == sku) return p.usd;

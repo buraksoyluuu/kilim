@@ -56,7 +56,7 @@ namespace Kilim.Game
 
         public string LocalizedPrice(string sku)
         {
-            return Live(sku) ? _store.products.WithID(sku).metadata.localizedPriceString : Skus.UsdPrice(sku);
+            return Live(sku) ? _store.products.WithID(sku).metadata.localizedPriceString : Skus.FallbackPrice(sku, Region.IsTurkey);
         }
 
         public void Purchase(string sku, Action<IapStatus, string> done)

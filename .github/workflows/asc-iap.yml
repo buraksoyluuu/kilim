@@ -1,0 +1,14 @@
+# App Store Connect satın alma ürünlerini (fiyat: USD taban, Türkiye TL) kurar. Tekrar çalıştırmak güvenli.
+name: App Store IAP
+on: workflow_dispatch
+jobs:
+  iap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install pyjwt cryptography requests
+      - run: python3 Tools/asc_iap.py
+        env:
+          APPSTORE_KEY_ID: U4H4GYWYG8
+          APPSTORE_ISSUER_ID: 3da5eccb-1939-4eb8-9db6-8ebf7aee4c9a
+          APPSTORE_P8: ${{ secrets.APPSTORE_P8 }}
