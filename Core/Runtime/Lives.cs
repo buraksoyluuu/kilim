@@ -12,6 +12,8 @@ namespace Kilim.Core
         public double RefillHours = 3;
         /// <summary>Canları coin ile hemen doldurma bedeli.</summary>
         public int RefillCoins = 900;
+        /// <summary>Bu bölüme kadar (dahil) kaybetmek can götürmez (öğrenme dönemi; config: lives_free_until).</summary>
+        public int FreeUntilLevel = 10;
     }
 
     /// <summary>

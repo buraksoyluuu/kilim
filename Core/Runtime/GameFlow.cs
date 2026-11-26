@@ -168,6 +168,7 @@ namespace Kilim.Core
         public bool GiveUp(LevelRun run)
         {
             if (run.IsDaily) return false;
+            if (run.Level.Id <= Config.Lives.FreeUntilLevel) Lives.Refund();   // öğrenme döneminde kayıp can götürmez
             Profile.ConsecutiveFails++;
             if (Profile.ConsecutiveFails >= 3 && !Profile.FreeUndoGiftGiven.Contains(run.Level.Id)
                 && Wallet.IsUnlocked(Booster.Undo))
@@ -177,6 +178,14 @@ namespace Kilim.Core
                 return true;
             }
             return false;
+        }
+
+        /// <summary>Coinle ipucu: coin düşer, sıradaki doğru hamle döner (yoksa coin düşmez).</summary>
+        public NextMove BuyHint(LevelRun run)
+        {
+            var m = HintPolicy.NextMove(run.Level, run.Session);
+            if (m == null || !Wallet.TrySpend(Config.HintCoins)) return null;
+            return m;
         }
 
         public bool WillGiftUndoOnGiveUp(LevelRun run) =>

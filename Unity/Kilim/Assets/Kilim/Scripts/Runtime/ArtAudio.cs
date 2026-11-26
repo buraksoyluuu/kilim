@@ -142,6 +142,7 @@ namespace Kilim.Game
         public static void Click() => Play("click", 0.6f);
 
         /// <summary>Yerleşim sesi (titreşim Haptic sınıfında, kısa ve hafif).</summary>
-        public static void Place(bool matched) => Play(matched ? "match" : "place");
+        // Desene uymayan yerleştirme cezalandırıcı duyulmasın: yumuşak, kısık "yerleşti" sesi.
+        public static void Place(bool matched) { if (matched) Play("match"); else Play("place", 0.35f); }
     }
 }

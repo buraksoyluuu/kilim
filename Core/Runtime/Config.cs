@@ -30,6 +30,8 @@ namespace Kilim.Core
         public int TeenMonthlySpendNoticeUsd = 100;
         /// <summary>Mağazada tanımlı olmayan ürün test mağazasına düşsün mü (yalnızca beta; yayında 0).</summary>
         public bool IapTestStore;
+        /// <summary>Coinle ipucu: sıradaki doğru hamleyi gösterir.</summary>
+        public int HintCoins = 100;
         /// <summary>Reklamlarda Google test birimleri (beta). Yayında 0.</summary>
         public bool AdsTestMode;
 
@@ -47,6 +49,8 @@ namespace Kilim.Core
             lv.Max = Data.Int(d, "lives_max", lv.Max);
             lv.RefillHours = Data.Double(d, "lives_refill_hours", lv.RefillHours);
             lv.RefillCoins = Data.Int(d, "lives_refill_coins", lv.RefillCoins);
+            lv.FreeUntilLevel = Data.Int(d, "lives_free_until", lv.FreeUntilLevel);
+            HintCoins = Data.Int(d, "hint_coins", HintCoins);
 
             var e = Economy;
             e.WinBase = Data.Int(d, "win_base", e.WinBase);

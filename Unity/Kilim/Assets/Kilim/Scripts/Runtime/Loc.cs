@@ -239,7 +239,8 @@ namespace Kilim.Game
             { "Güzel olmuş", "Looks lovely" }, { "Stil seç", "Choose a style" }, { "Sonra ücretsiz değiştirebilirsin.", "You can change it later for free." },
 
             // Ayarlar
-            { "Bildirimler", "Notifications" }, { "Can, günlük desen ve yarış hatırlatmaları", "Lives, daily pattern and race reminders" },
+            { "Bildirimler", "Notifications" }, { "İpucu", "Hint" }, { "İpucu için {0} coin gerekli.", "You need {0} coins for a hint." },
+            { "Önce bir hamleyi geri al, sonra ipucu iste.", "Undo a move first, then ask for a hint." }, { "Parlayan parçayı işaretli yere koy (gerekirse döndür).", "Place the glowing piece on the marked spot (rotate if needed)." }, { "Can, günlük desen ve yarış hatırlatmaları", "Lives, daily pattern and race reminders" },
             { "Canların doldu!", "Your lives are full!" }, { "Nine tezgâhta seni bekliyor, bir kilim daha dokuyalım.", "Grandma is waiting at the loom — let's weave another kilim." },
             { "Günün deseni hazır", "Today's pattern is ready" }, { "Bugünün kilim deseni seni bekliyor.", "Today's kilim pattern is waiting for you." },
             { "{0} günlük serin bozulmasın!", "Don't break your {0}-day streak!" }, { "Günün desenini dokuyarak serini koru.", "Weave today's pattern to keep your streak." },

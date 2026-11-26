@@ -65,7 +65,8 @@ namespace Kilim.Game
             _remaining = Ui.Label(v, "", 32, Theme.Muted, TextAnchor.MiddleCenter, true, 46);
             // Uzun telefonlar (iPhone 1170×2532 → ~2340 birim): fazla yükseklik tezgâha gider, parçalar irileşir.
             float extra = Mathf.Clamp(1080f * Screen.height / Mathf.Max(1, Screen.width) - 2000f, 0, 420);
-            _traySize = 228 + extra * 0.4f;
+            // 4 yuva + 3 boşluk ekran genişliğine (1080) sığmalı; uzun telefonda yükseklik kazancı genişliği aşmasın.
+            _traySize = Mathf.Min(228 + extra * 0.4f, (1080f - 48f - 3 * 14f) / GameSession.TraySlots);
             _trayRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, _traySize + 8, "Tray");
             _bonusRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, 120, "Bonus");
             _boosterRow = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 160, "Boosters");
@@ -288,7 +289,8 @@ namespace Kilim.Game
                         {
                             case HintLevel.Full:
                                 var mc = Theme.Motif(motif);
-                                img.color = Color.Lerp(Theme.CellEmpty, mc, 0.22f);
+                                // Aynı renkli komşu parçalar tek leke gibi görünmesin: her çözüm parçası kendi tonunda.
+                                img.color = Color.Lerp(Theme.CellEmpty, mc, PieceShade(r, c));
                                 Mark(g, motif, Theme.WithAlpha(mc, 0.55f));
                                 break;
                             case HintLevel.Glyph:
@@ -325,6 +327,65 @@ namespace Kilim.Game
         }
 
         public float Pitch => _pitch;
+
+        private int[,] _shade;
+
+        /// <summary>Çözüm parçalarına açgözlü 3 ton boyama (komşu iki parça aynı tonu almaz).</summary>
+        private float PieceShade(int r, int c)
+        {
+            if (_shade == null)
+            {
+                int n = L.Size;
+                var owner = new int[n, n];
+                for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) owner[i, j] = -1;
+                int k = 0;
+                if (L.Solution != null) foreach (var st in L.Solution) { foreach (var cell in st.Cells) owner[cell.Row, cell.Col] = k; k++; }
+                var tone = new int[k];
+                for (int p = 0; p < k; p++)
+                {
+                    var used = new HashSet<int>();
+                    for (int i = 0; i < n; i++) for (int j = 0; j < n; j++)
+                    {
+                        if (owner[i, j] != p) continue;
+                        foreach (var (di, dj) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                        {
+                            int a = i + di, b = j + dj;
+                            if (a < 0 || b < 0 || a >= n || b >= n) continue;
+                            int q = owner[a, b];
+                            if (q >= 0 && q < p) used.Add(tone[q]);
+                        }
+                    }
+                    int t = 0; while (used.Contains(t)) t++;
+                    tone[p] = t % 3;
+                }
+                _shade = new int[n, n];
+                for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) _shade[i, j] = owner[i, j] >= 0 ? tone[owner[i, j]] : 0;
+            }
+            return new[] { 0.16f, 0.30f, 0.44f }[_shade[r, c]];
+        }
+
+        /// <summary>Coinle ipucu: doğru parçayı ve yerini 3 sn gösterir.</summary>
+        private void OnHintTap()
+        {
+            if (!IsPlaying || App.Nav.HasModal) return;
+            var cost = App.Config.HintCoins;
+            if (HintPolicy.NextMove(L, S) == null) { App.Nav.Toast("Önce bir hamleyi geri al, sonra ipucu iste."); return; }
+            if (App.Meta.Wallet.Coins < cost) { App.Nav.Toast($"İpucu için {cost} coin gerekli."); return; }
+            var mv = App.Meta.BuyHint(_run);
+            if (mv == null) return;
+            App.Analytics.Track("hint_bought", ("level", L.Id), ("coins", cost));
+            App.Save();
+            var piece = S.Tray[mv.Slot];
+            _ghost.Clear();
+            _ghostColor = piece.Color;
+            foreach (var c in mv.Cells) _ghost.Add(c);
+            RefreshBoard();
+            _slots[mv.Slot].PopIn();
+            _hintText.text = Loc.T("Parlayan parçayı işaretli yere koy (gerekirse döndür).");
+            Audio.Play("match", 0.6f);
+            App.Delay(3f, () => { if (this == null) return; _ghost.Clear(); RefreshBoard(); UpdateTutorialHint(); });
+            BuildBoosters();
+        }
 
         public void SetGhost(Shape shape, Cell? anchor, string color)
         {
@@ -469,7 +530,20 @@ namespace Kilim.Game
             BoosterButton(Booster.Undo, "Geri Al", "undo");
             BoosterButton(Booster.Swap, _swapMode ? "Vazgeç" : "Değiştir", "swap");
             BoosterButton(Booster.SingleStitch, "Tek İlmek", "stitch");
+            HintButton();
             _boosterRow.gameObject.SetActive(_boosterRow.childCount > 0);
+        }
+
+        private void HintButton()
+        {
+            var btn = Ui.Button(_boosterRow, "", OnHintTap, Theme.Panel, Theme.Ink, 156, 30);
+            var label = Ui.ButtonLabel(btn);
+            label.text = "";
+            var inner = Ui.VStack(btn.transform, 2, 6, TextAnchor.MiddleCenter);
+            inner.Stretch(8, 8, 8, 14);
+            Ui.Label(inner, "💡", 52, Theme.Ink, TextAnchor.MiddleCenter, false, 64);
+            Ui.Label(inner, "İpucu", 30, Theme.Ink, TextAnchor.MiddleCenter, true, 36);
+            Ui.Label(inner, $"{App.Config.HintCoins} coin", 24, Theme.Muted, TextAnchor.MiddleCenter, false, 28);
         }
 
         private void BoosterButton(Booster b, string name, string icon)

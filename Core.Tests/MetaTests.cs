@@ -353,7 +353,7 @@ namespace Kilim.Core.Tests
         {
             var clock = new ManualClock(new DateTime(2026, 11, 12, 18, 30, 0), TimeSpan.FromHours(3)); // yerel 21:30
             var m = NewMeta(clock);
-            m.GiveUp(m.StartLevel(Region1[0]));                       // 1 can gitti → 3 saat sonra (00:30) dolar
+            m.GiveUp(m.StartLevel(Region1[11]));                      // 1 can gitti → 3 saat sonra (00:30) dolar
             var plan = NotificationPlanner.Plan(m);
             var lives = plan.Find(n => n.Kind == NotifKind.LivesFull);
             Assert.True(lives != null && lives.FireLocal == new DateTime(2026, 11, 13, 9, 0, 0), "sessiz saat → 09:00");
@@ -365,17 +365,32 @@ namespace Kilim.Core.Tests
             Assert.Equal(0, NotificationPlanner.Plan(m).Count, "oyuncu kapattı");
         }
 
+        [Test("HINT-01")]
+        public static void CoinHintGivesSolutionMoveAndCharges()
+        {
+            var m = NewMeta();
+            var run = m.StartLevel(Region1[11]);
+            int before = m.Wallet.Coins;
+            var mv = m.BuyHint(run);
+            Assert.True(mv != null, "ipucu var");
+            Assert.Equal(before - m.Config.HintCoins, m.Wallet.Coins, "coin düştü");
+            var anchorPiece = run.Session.Tray[mv.Slot];
+            Assert.True(anchorPiece != null && mv.Cells.Count == anchorPiece.Shape.Cells.Count, "parça boyu tutuyor");
+        }
+
         [Test("LIFE-01")]
         public static void LivesConsumeOnStartRefundOnWinRegenHourly()
         {
             var m = NewMeta();
             var clock = (ManualClock)m.Clock;
             Assert.Equal(3, m.Lives.Count);
-            var run = m.StartLevel(Region1[0]);
+            m.GiveUp(m.StartLevel(Region1[0]));
+            Assert.Equal(3, m.Lives.Count, "ilk 10 bölümde kayıp can götürmez");
+            var run = m.StartLevel(Region1[11]);
             Assert.Equal(2, m.Lives.Count, "başlarken 1 can");
             m.GiveUp(run);
             Assert.Equal(2, m.Lives.Count, "pes etmek ek can yakmaz");
-            m.StartLevel(Region1[0]); m.StartLevel(Region1[0]);
+            m.StartLevel(Region1[11]); m.StartLevel(Region1[11]);
             Assert.Equal(0, m.Lives.Count);
             Assert.False(m.Lives.CanPlay);
             Assert.True(m.Lives.FullIn.TotalMinutes > 179 && m.Lives.FullIn.TotalMinutes <= 180, "3 saatte dolar");
@@ -385,7 +400,7 @@ namespace Kilim.Core.Tests
             Assert.Equal(3, m.Lives.Count, "3 saatte hepsi birden");
             m.Config.Apply("{\"lives_refill_hours\": 5}");
             Assert.Equal(5.0, m.Config.Lives.RefillHours, "uzaktan ayar");
-            m.CompleteWin(WinLevel(m, Region1[0]));
+            m.CompleteWin(WinLevel(m, Region1[11]));
             Assert.Equal(3, m.Lives.Count, "kazanınca iade");
         }
 
