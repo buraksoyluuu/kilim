@@ -248,7 +248,12 @@ namespace Kilim.Game
             ConsentScreen.Toggle(list, "Sol el modu", p.LeftHanded, on => { p.LeftHanded = on; app.Save(); });
             ConsentScreen.Toggle(list, "Kolay mod (desen ipucu hep tahtada)", p.EasyMode, on => { p.EasyMode = on; app.Save(); });
             Ui.Button(list, "Hikâyeyi yeniden izle", () => app.Nav.Show(new IntroScreen(() => app.Nav.Show(new SettingsScreen()))), Theme.Neutral, Theme.Ink, 110, 40);
-            ConsentScreen.Toggle(list, "Günlük desen bildirimi", p.DailyNotification, on => { p.DailyNotification = on; app.Save(); });
+            ConsentScreen.Toggle(list, "Bildirimler", p.Notifications, on =>
+            {
+                p.Notifications = on;
+                app.Save();
+                if (on) app.StartCoroutine(Push.RequestPermission(null));
+            });
             Ui.Button(list, Loc.Lang == "tr" ? "Dil: Türkçe" : "Dil: English", () =>
             {
                 int i = System.Array.IndexOf(Loc.Supported, Loc.Lang);

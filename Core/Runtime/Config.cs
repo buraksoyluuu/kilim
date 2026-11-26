@@ -9,6 +9,7 @@ namespace Kilim.Core
     {
         public EconomyConfig Economy { get; } = new EconomyConfig();
         public LivesConfig Lives { get; } = new LivesConfig();
+        public NotifConfig Notif { get; } = new NotifConfig();
 
         public bool ContinueAdEnabled = true;
         public int InterFromLevel = 12;
@@ -57,6 +58,18 @@ namespace Kilim.Core
             e.BoosterPrice[Booster.Swap] = Data.Int(bp, "swap", e.BoosterPrice[Booster.Swap]);
             e.BoosterPrice[Booster.SingleStitch] = Data.Int(bp, "single", e.BoosterPrice[Booster.SingleStitch]);
 
+            var nc = Notif;
+            nc.Enabled = Data.Int(d, "notif_enabled", nc.Enabled ? 1 : 0) == 1;
+            nc.MaxPerDay = Data.Int(d, "notif_max_per_day", nc.MaxPerDay);
+            nc.DailyHour = Data.Int(d, "notif_daily_hour", nc.DailyHour);
+            nc.StreakHour = Data.Int(d, "notif_streak_hour", nc.StreakHour);
+            var off = Data.Str(d, "notif_off", null);
+            if (off != null)
+            {
+                nc.Off.Clear();
+                foreach (var k in off.Split(','))
+                    if (System.Enum.TryParse<NotifKind>(k.Trim(), true, out var nk)) nc.Off.Add(nk);
+            }
             IapTestStore = Data.Int(d, "iap_test_store", IapTestStore ? 1 : 0) == 1;
             ContinueAdEnabled = Data.Bool(d, "continue_ad_enabled", ContinueAdEnabled);
             InterFromLevel = Data.Int(d, "inter_from_level", InterFromLevel);

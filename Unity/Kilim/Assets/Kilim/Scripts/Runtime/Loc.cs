@@ -239,6 +239,14 @@ namespace Kilim.Game
             { "Güzel olmuş", "Looks lovely" }, { "Stil seç", "Choose a style" }, { "Sonra ücretsiz değiştirebilirsin.", "You can change it later for free." },
 
             // Ayarlar
+            { "Bildirimler", "Notifications" }, { "Can, günlük desen ve yarış hatırlatmaları", "Lives, daily pattern and race reminders" },
+            { "Canların doldu!", "Your lives are full!" }, { "Nine tezgâhta seni bekliyor, bir kilim daha dokuyalım.", "Grandma is waiting at the loom — let's weave another kilim." },
+            { "Günün deseni hazır", "Today's pattern is ready" }, { "Bugünün kilim deseni seni bekliyor.", "Today's kilim pattern is waiting for you." },
+            { "{0} günlük serin bozulmasın!", "Don't break your {0}-day streak!" }, { "Günün desenini dokuyarak serini koru.", "Weave today's pattern to keep your streak." },
+            { "Yarış bitmek üzere!", "The race is ending soon!" }, { "Son saatler: bir bayrak daha kap, sıranı yükselt.", "Final hours: grab another flag and climb the ranks." },
+            { "Kumbaran doldu", "Your piggy bank is full" }, { "Biriken altınlar kırılmayı bekliyor.", "Your saved coins are ready to collect." },
+            { "Avlunun çeşmesi seni bekliyor", "The courtyard fountain misses you" }, { "Nine'nin evi seni özledi, kaldığın yerden devam et.", "Grandma's house misses you — pick up where you left off." },
+            { "Tezgâh tozlanmasın", "Don't let the loom gather dust" }, { "Yeni desenler ve ödüller seni bekliyor.", "New patterns and rewards are waiting." },
             { "Müzik", "Music" }, { "Efektler", "Sound effects" }, { "Titreşim", "Vibration" }, { "Sol el modu", "Left-handed mode" },
             { "Günlük desen bildirimi", "Daily pattern reminder" }, { "Dil: Türkçe", "Language: Turkish" }, { "Dil: English", "Language: English" },
             { "Bulut kayıt (Game Center / Play Games)", "Cloud save (Game Center / Play Games)" },

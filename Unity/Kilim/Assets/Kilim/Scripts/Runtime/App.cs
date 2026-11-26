@@ -75,6 +75,38 @@ namespace Kilim.Game
             Analytics.Track("app_start", ("version", Application.version));
             Nav.Show(new SplashScreen());
             StartCoroutine(Backend.Startup());
+            Push.Init();
+            Push.ClearDelivered();
+            StartCoroutine(Push.ConsumeOpened(OpenFromNotification));
+        }
+
+        /// <summary>Bildirimden açılış: splash/backend bittikten sonra ilgili ekrana gider.</summary>
+        private void OpenFromNotification(string link)
+        {
+            if (string.IsNullOrEmpty(link)) return;
+            Analytics.Track("notif_open", ("link", link));
+            StartCoroutine(OpenWhenReady(link));
+        }
+
+        private System.Collections.IEnumerator OpenWhenReady(string link)
+        {
+            while (Nav.Current is SplashScreen || !(Profile.IntroSeen)) yield return null;
+            switch (link)
+            {
+                case "daily": Nav.Show(new DailyScreen()); break;
+                case "race": Nav.Show(new RaceScreen()); break;
+                case "shop": Nav.Show(new ShopScreen()); break;
+                default: GoHome(); break;
+            }
+        }
+
+        /// <summary>İlk kazanılan bölümden sonra bildirim izni bir kez istenir (açılışta değil).</summary>
+        private void MaybeAskNotifications()
+        {
+            if (Profile.NotifAsked) return;
+            Profile.NotifAsked = true;
+            Save();
+            StartCoroutine(Push.RequestPermission(ok => { Analytics.Track("notif_permission", ("granted", ok ? "1" : "0")); }));
         }
 
         /// <summary>Bulut kaydı yereldekinden ilerideyse profil değiştirilir; açık ekran yeniden kurulur.</summary>
@@ -114,11 +146,12 @@ namespace Kilim.Game
 
         private void OnApplicationPause(bool paused)
         {
-            if (paused && Meta != null) { Save(); Backend?.CloudSave(force: true); }
-            else if (!paused && Backend != null && Backend.Online) StartCoroutine(Backend.SyncRefunds());
+            if (paused && Meta != null) { Save(); Backend?.CloudSave(force: true); Push.Reschedule(Meta); }
+            else if (!paused) Push.ClearDelivered();
+            if (!paused && Backend != null && Backend.Online) StartCoroutine(Backend.SyncRefunds());
         }
 
-        private void OnApplicationQuit() { if (Meta != null) { Profile.FirstSessionDone = true; Save(); Backend?.CloudSave(force: true); } }
+        private void OnApplicationQuit() { if (Meta != null) { Profile.FirstSessionDone = true; Save(); Backend?.CloudSave(force: true); Push.Reschedule(Meta); } }
 
         // ---------------------------------------------------------------
         // Kanvas
@@ -219,6 +252,8 @@ namespace Kilim.Game
         /// <summary>Kazandın ekranından çıkış (sonraki bölüm, tekrar, ana menü); kural uygunsa önce tam ekran reklam (UAT ADS-01..09).</summary>
         public void LeaveWin(int levelWon, Action then)
         {
+            var next = then;
+            then = () => { next?.Invoke(); MaybeAskNotifications(); };
             var block = Meta.Ads.CanShowInterstitial(Profile, levelWon, cameFromFail: false);
             if (block != InterstitialBlock.None) { then?.Invoke(); return; }
             Ads.ShowInterstitial("win_exit", () =>

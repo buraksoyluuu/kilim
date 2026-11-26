@@ -54,6 +54,7 @@ namespace Kilim.EditorTools
             PlayerSettings.iOS.appleDeveloperTeamID = string.IsNullOrEmpty(team) ? "3UTU4G8NGA" : team;
 
             ConfigureAds();
+            ConfigureNotifications();
             SetActiveInputHandlingBoth();
             SetIcon();
             EnsureScene();
@@ -81,6 +82,17 @@ namespace Kilim.EditorTools
             t.GetProperty("GoogleMobileAdsIOSAppId").SetValue(inst, Get("ios_app", "ca-app-pub-3940256099942544~1458002511"));
             EditorUtility.SetDirty((UnityEngine.Object)inst);
             Debug.Log($"[Kilim] AdMob: {(json.Contains("android_app") ? "gerçek kimlikler" : "test kimlikleri")}");
+        }
+
+        /// <summary>iOS bildirim izni açılışta değil, ilk kazanılan bölümden sonra istenir (Push.RequestPermission).</summary>
+        private static void ConfigureNotifications()
+        {
+            var t = AppDomain.CurrentDomain.GetAssemblies().SelectMany(a => { try { return a.GetTypes(); } catch { return Type.EmptyTypes; } })
+                .FirstOrDefault(x => x.FullName == "Unity.Notifications.NotificationSettings+iOSSettings");
+            var prop = t?.GetProperty("RequestAuthorizationOnAppLaunch");
+            if (prop == null) { Debug.LogWarning("[Kilim] Bildirim ayarı bulunamadı"); return; }
+            prop.SetValue(null, false);
+            Debug.Log("[Kilim] iOS bildirim izni: açılışta sorulmaz");
         }
 
         /// <summary>UI olay sistemi eski giriş modülünü kullanıyor: Active Input Handling = Both (2).</summary>

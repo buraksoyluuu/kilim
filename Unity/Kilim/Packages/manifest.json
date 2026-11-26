@@ -13,7 +13,8 @@
     "com.unity.test-framework": "1.4.5",
     "com.unity.ugui": "2.0.0",
     "com.google.ads.mobile": "11.6.0",
-    "com.unity.ads.ios-support": "1.2.0"
+    "com.unity.ads.ios-support": "1.2.0",
+    "com.unity.mobile.notifications": "2.4.0"
   },
   "scopedRegistries": [
     {

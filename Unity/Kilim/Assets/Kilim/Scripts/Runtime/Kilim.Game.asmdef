@@ -14,7 +14,10 @@
         "GoogleMobileAds.Ump",
         "GoogleMobileAds.Ump.Api",
         "GoogleMobileAds.Ump.Core",
-        "Unity.Advertisement.IosSupport"
+        "Unity.Advertisement.IosSupport",
+        "Unity.Notifications.Unified",
+        "Unity.Notifications.Android",
+        "Unity.Notifications.iOS"
     ],
     "autoReferenced": true
 }

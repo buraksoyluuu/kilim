@@ -348,6 +348,23 @@ namespace Kilim.Core.Tests
             Assert.True(q.HousesIntroduced.Contains("bag"));
         }
 
+        [Test("NOTIF-01")]
+        public static void NotificationPlanRespectsQuietHoursCapAndConfig()
+        {
+            var clock = new ManualClock(new DateTime(2026, 11, 12, 18, 30, 0), TimeSpan.FromHours(3)); // yerel 21:30
+            var m = NewMeta(clock);
+            m.GiveUp(m.StartLevel(Region1[0]));                       // 1 can gitti → 3 saat sonra (00:30) dolar
+            var plan = NotificationPlanner.Plan(m);
+            var lives = plan.Find(n => n.Kind == NotifKind.LivesFull);
+            Assert.True(lives != null && lives.FireLocal == new DateTime(2026, 11, 13, 9, 0, 0), "sessiz saat → 09:00");
+            foreach (var g in plan.GroupBy(n => n.FireLocal.Date)) Assert.True(g.Count() <= 2, "günde en fazla 2");
+            Assert.True(plan.All(n => n.FireLocal.Hour >= 9 && n.FireLocal.Hour < 22), "gece bildirim yok");
+            m.Config.Apply("{\"notif_off\": \"LivesFull,Comeback3\"}");
+            Assert.True(NotificationPlanner.Plan(m).All(n => n.Kind != NotifKind.LivesFull && n.Kind != NotifKind.Comeback3), "uzaktan kapatma");
+            m.Profile.Notifications = false;
+            Assert.Equal(0, NotificationPlanner.Plan(m).Count, "oyuncu kapattı");
+        }
+
         [Test("LIFE-01")]
         public static void LivesConsumeOnStartRefundOnWinRegenHourly()
         {

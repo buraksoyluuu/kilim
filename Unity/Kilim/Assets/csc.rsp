@@ -1,2 +1,3 @@
 -define:KILIM_UNITY_IAP
 -define:KILIM_ADMOB
+-define:KILIM_NOTIF
