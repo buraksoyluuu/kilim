@@ -7,7 +7,7 @@ on:
       key:
         description: 'Ayar'
         type: choice
-        options: [lives_refill_hours, lives_max, lives_refill_coins, iap_test_store, ads_test_mode, notif_enabled, notif_max_per_day, notif_daily_hour, notif_streak_hour, inter_from_level, rewarded_daily_cap]
+        options: [lives_refill_hours, lives_max, lives_refill_coins, lives_free_until, hint_coins, task_cost_mult, iap_test_store, ads_test_mode, notif_enabled, notif_max_per_day, notif_daily_hour, notif_streak_hour, inter_from_level, rewarded_daily_cap]
         default: lives_refill_hours
       value:
         description: 'Değer (sayı)'

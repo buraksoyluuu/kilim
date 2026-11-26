@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -143,11 +144,22 @@ namespace Kilim.Core
                 }),
         };
 
+        private static int _built;
+
+        /// <summary>Uzaktan çarpan (task_cost_mult): ilerleme hızını sürümsüz ayarlar.</summary>
+        public static double CostMultiplier = 1.0;
+
+        public static int CostOf(HomeTask t) => Math.Max(1, (int)Math.Round(t.Cost * CostMultiplier));
+
         private static House H(string id, string name, string intro, string[] areas, string[] art, HomeTask[] tasks)
         {
             var house = new House { Id = id, Name = name, Intro = intro, Areas = areas, AreaArt = art, Tasks = new List<HomeTask>() };
+            // Artan maliyet (geri bildirim: ev çok hızlı doluyor, içerik ~65. bölümde bitiyordu):
+            // ev 1: 2–3, ev 2: 3–4, ev 3: 4–5, ev 4: 5–6 ilmek → toplam ≈ 320, son ev ≈ 150. bölüm.
+            int houseIndex = _built++;
             for (int i = 0; i < tasks.Length; i++)
             {
+                tasks[i].Cost = houseIndex + 1 + Math.Min(tasks[i].Cost, 2);
                 tasks[i].House = id;
                 tasks[i].Area = areas[i / 4];
                 house.Tasks.Add(tasks[i]);
@@ -195,12 +207,12 @@ namespace Kilim.Core
             (float)h.Tasks.Count(t => p.HomeTasksDone.Contains(t.Id)) / h.Tasks.Count;
 
         public static bool CanDo(PlayerProfile p, HomeTask t) =>
-            NextTask(p) == t && p.Wallet.Ilmek >= t.Cost;
+            NextTask(p) == t && p.Wallet.Ilmek >= CostOf(t);
 
         /// <summary>Görevi yapar; stil seçimi varsa ilk stil varsayılan (sonra ücretsiz değiştirilebilir).</summary>
         public static bool Do(PlayerProfile p, HomeTask t, string style = null)
         {
-            if (!CanDo(p, t) || !p.Wallet.TrySpendIlmek(t.Cost)) return false;
+            if (!CanDo(p, t) || !p.Wallet.TrySpendIlmek(CostOf(t))) return false;
             p.HomeTasksDone.Add(t.Id);
             if (t.Styles != null) p.HomeStyles[t.Id] = style != null && t.Styles.Contains(style) ? style : t.Styles[0];
             return true;

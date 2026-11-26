@@ -97,7 +97,7 @@ namespace Kilim.Core.Tests
         [Test("TRAY-01")]
         public static void TrayShowsFirstFourAndRemaining()
         {
-            var s = new GameSession(Region1[0]); // 9 parça
+            var s = new GameSession(Legacy1); // 9 parça
             Assert.Equal("0,1,2,3", string.Join(",", s.Tray.Take(4).Select(p => p.QueueIndex)));
             Assert.Equal(5, s.RemainingInQueue);
             Assert.Equal(9, s.RemainingPieces);
@@ -106,7 +106,7 @@ namespace Kilim.Core.Tests
         [Test("TRAY-02")]
         public static void RefillGoesToEmptiedSlot()
         {
-            var l = Region1[0];
+            var l = Legacy1;
             var s = new GameSession(l);
             var step = l.Solution[0]; // q3
             int slot = SlotOf(s, step.QueueIndex);
@@ -234,7 +234,7 @@ namespace Kilim.Core.Tests
         [Test("BST-01")]
         public static void UndoRestoresBoardTrayAndQueue()
         {
-            var l = Region1[0];
+            var l = Legacy1;
             var s = new GameSession(l);
             var step = l.Solution[0];
             int slot = SlotOf(s, step.QueueIndex);
@@ -250,8 +250,8 @@ namespace Kilim.Core.Tests
         [Test("BST-02")]
         public static void UndoNotAvailableAfterSwap()
         {
-            var s = new GameSession(Region1[0]);
-            PlaceCells(s, SlotOf(s, Region1[0].Solution[0].QueueIndex), Region1[0].Solution[0].Cells);
+            var s = new GameSession(Legacy1);
+            PlaceCells(s, SlotOf(s, Legacy1.Solution[0].QueueIndex), Legacy1.Solution[0].Cells);
             Assert.True(s.Swap(0));
             Assert.False(s.CanUndo);
             Assert.False(s.Undo());
@@ -260,7 +260,7 @@ namespace Kilim.Core.Tests
         [Test("BST-03")]
         public static void SwapSendsToQueueEnd()
         {
-            var s = new GameSession(Region1[0]); // tezgâh q0..q3, kuyruk q4..q8
+            var s = new GameSession(Legacy1); // tezgâh q0..q3, kuyruk q4..q8
             Assert.True(s.Swap(1));
             Assert.Equal(4, s.Tray[1].QueueIndex, "yuvaya sıradaki");
             Assert.Equal(5, s.RemainingInQueue, "sayı değişmez");
@@ -341,7 +341,7 @@ namespace Kilim.Core.Tests
         [Test("BST-07")]
         public static void BonusSlotsAreLimited()
         {
-            var s = new GameSession(Region1[0]);
+            var s = new GameSession(Legacy1);
             Assert.True(s.AddSingleStitch());
             Assert.True(s.AddSingleStitch());
             Assert.False(s.AddSingleStitch(), "en fazla 2 ek yuva");

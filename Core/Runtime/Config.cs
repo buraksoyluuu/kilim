@@ -51,6 +51,7 @@ namespace Kilim.Core
             lv.RefillCoins = Data.Int(d, "lives_refill_coins", lv.RefillCoins);
             lv.FreeUntilLevel = Data.Int(d, "lives_free_until", lv.FreeUntilLevel);
             HintCoins = Data.Int(d, "hint_coins", HintCoins);
+            Home.CostMultiplier = Data.Double(d, "task_cost_mult", Home.CostMultiplier);
 
             var e = Economy;
             e.WinBase = Data.Int(d, "win_base", e.WinBase);

@@ -276,18 +276,19 @@ namespace Kilim.Core.Tests
         [Test("META-01..META-05")]
         public static void HomeTasksCostAndOrder()
         {
-            Assert.Equal(40, Home.TotalCost);
+            Assert.Equal(56, Home.TotalCost);   // ev 1: 2–3 ilmek
             Assert.Equal(20, Home.Region1.Count);
             var m = NewMeta();
             var first = Home.NextTask(m.Profile);
             Assert.False(Home.Do(m.Profile, first), "ilmek yok");
             m.CompleteWin(WinLevel(m, Region1[0]));  // +3 ilmek
-            Assert.True(Home.Do(m.Profile, first));
+            Assert.True(Home.Do(m.Profile, first), "ilk görev 2–3 ilmek");
+            m.CompleteWin(WinLevel(m, Region1[1]));  // +3 ilmek
             var second = Home.NextTask(m.Profile);
             Assert.True(Home.Do(m.Profile, second, "Hereke"));
             Assert.Equal("Hereke", m.Profile.HomeStyles[second.Id]);
             Assert.True(Home.ChangeStyle(m.Profile, second, "Yörük"));
-            Assert.Equal(0, m.Wallet.Ilmek);
+            Assert.Equal(6 - Home.CostOf(first) - Home.CostOf(second), m.Wallet.Ilmek);
         }
 
         [Test("META-06")]

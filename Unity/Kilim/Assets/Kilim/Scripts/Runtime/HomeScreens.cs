@@ -84,7 +84,7 @@ namespace Kilim.Game
             }
 
             var bottom = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 150);
-            bool canTask = next != null && m.Wallet.Ilmek >= next.Cost;
+            bool canTask = next != null && m.Wallet.Ilmek >= Home.CostOf(next);
             NavTile(bottom, "map", "Harita", () => app.Nav.Show(new LevelMapScreen()), false);
             NavTile(bottom, "home", "Ev", () => app.Nav.Show(new DecorScreen()), canTask);
             NavTile(bottom, "shop", "Mağaza", () => app.Nav.Show(new ShopScreen()), false);
@@ -320,7 +320,7 @@ namespace Kilim.Game
                 else
                 {
                     Ui.Icon(row, Art.Ilmek, 52);
-                    var c = Ui.Label(row, t.Cost.ToString(), 40, Theme.Ink, TextAnchor.MiddleLeft, true);
+                    var c = Ui.Label(row, Home.CostOf(t).ToString(), 40, Theme.Ink, TextAnchor.MiddleLeft, true);
                     Ui.Size(c.gameObject, 50, 80, 0);
                 }
 
@@ -345,7 +345,7 @@ namespace Kilim.Game
                     else
                     {
                         var r2 = Ui.HStack(card, 12, 0, TextAnchor.MiddleCenter, 100);
-                        Ui.Label(r2, $"{task.Cost - p.Wallet.Ilmek} ilmek daha", 32, Theme.Muted);
+                        Ui.Label(r2, $"{Home.CostOf(task) - p.Wallet.Ilmek} ilmek daha", 32, Theme.Muted);
                         Ui.Button(r2, "Oyna ▶", () => app.StartLevel(p.CurrentLevel), Theme.Primary, Color.white, 100, 38);
                     }
                 }

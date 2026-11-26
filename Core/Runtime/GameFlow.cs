@@ -146,7 +146,7 @@ namespace Kilim.Core
                 foreach (var kv in Config.Economy.BoosterUnlockLevel)
                     if (kv.Value == Profile.CurrentLevel && !r.IsReplay) { r.BoostersUnlockedNext = true; r.UnlocksNext = kv.Key; }
                 var task = Home.NextTask(Profile);
-                r.TaskAffordable = ilmek > 0 && task != null && Wallet.Ilmek >= task.Cost && Wallet.Ilmek - ilmek < task.Cost;
+                r.TaskAffordable = ilmek > 0 && task != null && Wallet.Ilmek >= Home.CostOf(task) && Wallet.Ilmek - ilmek < Home.CostOf(task);
             }
             r.PassLevelAfter = Pass.Level(Profile);
             run.Completed = true;

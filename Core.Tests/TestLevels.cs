@@ -37,6 +37,11 @@ namespace Kilim.Core.Tests
             }
         }
 
+        private static LevelData _legacy1;
+
+        /// <summary>Eski 1. bölüm (5×5, 9 parça): tepsi/kuyruk mekaniği testleri için sabit fikstür.</summary>
+        public static LevelData Legacy1 => _legacy1 ??= LevelParser.ParseMany(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "fixtures", "legacy_level1.json")))[0];
+
         public static Shape S(params int[] rc)
         {
             var cells = new List<Cell>();

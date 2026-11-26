@@ -91,7 +91,7 @@ namespace Kilim.Core.Tests
             var w = new Wallet(700);
             w.UnlockBoostersUpTo(12, Cfg);
             var svc = new BoosterService(w, Cfg);
-            var s = new GameSession(Region1[0]);
+            var s = new GameSession(Legacy1);
             for (int i = 0; i < 3; i++) Assert.Equal(BoosterUseResult.Applied, svc.Use(s, Booster.Swap, 0));
             Assert.Equal(0, w.BoosterCount(Booster.Swap));
             Assert.Equal(BoosterUseResult.Applied, svc.Use(s, Booster.Swap, 0));

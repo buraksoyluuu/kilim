@@ -11,6 +11,7 @@
   <ItemGroup>
     <!-- Core kaynakları doğrudan derlenir: Unity'nin derlediği dosyaların aynısı. -->
     <Compile Include="../Core/Runtime/**/*.cs" Link="Core/%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="fixtures/*.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../Data/levels/*.json" Link="levels/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

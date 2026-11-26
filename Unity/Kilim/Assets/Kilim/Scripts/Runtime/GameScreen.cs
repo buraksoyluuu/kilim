@@ -376,7 +376,8 @@ namespace Kilim.Game
         /// <summary>Coachmark: "Dokun → döner". Oyuncu bir kez döndürene kadar ilk parçanın üstünde, parça arada kendini döndürür.</summary>
         private void ShowRotateCoach(bool force = false)
         {
-            if (this == null || _coach != null || _run.IsDaily || (!force && App.Profile.RotateLearned)) return;
+            // İlk 4 bölümde döndürme gerekmez; balon 5. bölümde (ilk döndürmeli bölüm) ya da tıkanınca çıkar.
+            if (this == null || _coach != null || _run.IsDaily || (!force && (App.Profile.RotateLearned || L.Id < 5))) return;
             int slot = -1;
             for (int i = 0; i < GameSession.TraySlots; i++)
                 if (S.Tray[i] != null && S.Tray[i].Shape.DistinctRotations().Count > 1) { slot = i; break; }
@@ -830,7 +831,7 @@ namespace Kilim.Game
                 SetGhostSilently(Shape.From(step.Cells), new Cell(MinRow(step.Cells), MinCol(step.Cells)), L.Queue[step.QueueIndex].Color);
             }
             else if (!_run.IsDaily && L.Id == 2 && S.PlacementCount < 2) _hintText.text = Loc.T("Rengi motifle eşleşen parça desen yıldızı kazandırır.");
-            else if (!_run.IsDaily && L.Id == 4 && S.PlacementCount == 0) _hintText.text = Loc.T("Parçaya dokun: saat yönünde döner.");
+            else if (!_run.IsDaily && L.Id == 5 && S.PlacementCount == 0) _hintText.text = Loc.T("Parçaya dokun: saat yönünde döner.");
             else if (_run.IsDaily) _hintText.text = Loc.T("Süre yok, kaybetmek yok.");
             else if (_hint != HintLevel.Full && S.PlacementCount == 0) _hintText.text = Loc.T("Desen kartına dokun: hedef deseni gör.");
             else _hintText.text = "";

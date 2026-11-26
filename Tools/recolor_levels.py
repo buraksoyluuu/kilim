@@ -25,6 +25,7 @@ PALETTES = {1: 'KSL', 2: 'LKS', 3: 'SKZ', 4: 'MSL', 5: 'ZSK', 6: 'KLSM', 7: 'LSK
 for path in sorted(glob.glob('Data/levels/region*.json')):
     levels = json.load(open(path))
     for lv in levels:
+        if lv.get('handmade'): continue   # warmup_levels.py
         n = lv['size']
         pal = PALETTES.get(lv['region'], 'KSL')
         queue = ast.literal_eval(lv['queue']) if isinstance(lv['queue'], str) else lv['queue']
