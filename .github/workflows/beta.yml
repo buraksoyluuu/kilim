@@ -91,6 +91,7 @@ jobs:
           buildName: Kilim
           androidExportType: ${{ matrix.kind == 'aab' && 'androidAppBundle' || 'androidPackage' }}
           androidVersionCode: ${{ github.run_number }}
+          androidTargetSdkVersion: AndroidApiLevel36
           androidKeystoreName: kilim-upload.keystore
           androidKeystoreBase64: ${{ steps.sign.outputs.keystore }}
           androidKeystorePass: ${{ steps.sign.outputs.storepass }}

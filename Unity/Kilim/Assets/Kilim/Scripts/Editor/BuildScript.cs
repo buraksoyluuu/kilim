@@ -48,6 +48,7 @@ namespace Kilim.EditorTools
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel24;
+            PlayerSettings.Android.targetSdkVersion = (AndroidSdkVersions)36; // Play: hedef API ≥ 36
             // iOS
             PlayerSettings.iOS.targetOSVersionString = "14.0";
             PlayerSettings.iOS.appleEnableAutomaticSigning = true;
