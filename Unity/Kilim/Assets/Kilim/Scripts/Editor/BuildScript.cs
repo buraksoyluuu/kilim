@@ -53,11 +53,34 @@ namespace Kilim.EditorTools
             var team = Environment.GetEnvironmentVariable("APPLE_TEAM_ID");
             PlayerSettings.iOS.appleDeveloperTeamID = string.IsNullOrEmpty(team) ? "3UTU4G8NGA" : team;
 
+            ConfigureAds();
             SetActiveInputHandlingBoth();
             SetIcon();
             EnsureScene();
             AssetDatabase.SaveAssets();
             Debug.Log("[Kilim] Proje ayarları uygulandı");
+        }
+
+        /// <summary>
+        /// AdMob uygulama kimliği (GoogleMobileAdsSettings, internal → yansıma). Kaynak: Resources/ads.json
+        /// (CI, ADMOB_* secret'larından yazar; android_app, ios_app, *_rewarded, *_interstitial). Yoksa Google test kimlikleri.
+        /// </summary>
+        private static void ConfigureAds()
+        {
+            const string path = "Assets/Kilim/Resources/ads.json";
+            var json = File.Exists(path) ? File.ReadAllText(path) : "";
+            string Get(string k, string test)
+            {
+                var m = System.Text.RegularExpressions.Regex.Match(json, "\"" + k + "\"\\s*:\\s*\"([^\"]+)\"");
+                return m.Success ? m.Groups[1].Value : test;
+            }
+            var t = Type.GetType("GoogleMobileAds.Editor.GoogleMobileAdsSettings, GoogleMobileAds.Editor");
+            var inst = t?.GetMethod("LoadInstance", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public)?.Invoke(null, null);
+            if (inst == null) { Debug.LogWarning("[Kilim] GoogleMobileAdsSettings bulunamadı"); return; }
+            t.GetProperty("GoogleMobileAdsAndroidAppId").SetValue(inst, Get("android_app", "ca-app-pub-3940256099942544~3347511713"));
+            t.GetProperty("GoogleMobileAdsIOSAppId").SetValue(inst, Get("ios_app", "ca-app-pub-3940256099942544~1458002511"));
+            EditorUtility.SetDirty((UnityEngine.Object)inst);
+            Debug.Log($"[Kilim] AdMob: {(json.Contains("android_app") ? "gerçek kimlikler" : "test kimlikleri")}");
         }
 
         /// <summary>UI olay sistemi eski giriş modülünü kullanıyor: Active Input Handling = Both (2).</summary>

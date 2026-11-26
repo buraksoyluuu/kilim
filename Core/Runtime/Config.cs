@@ -27,6 +27,8 @@ namespace Kilim.Core
         public string SeasonId = "s7-fas";
         public int DailyPatternReward = 100;
         public int TeenMonthlySpendNoticeUsd = 100;
+        /// <summary>Mağazada tanımlı olmayan ürün test mağazasına düşsün mü (yalnızca beta; yayında 0).</summary>
+        public bool IapTestStore;
 
         public static GameConfig Default => new GameConfig();
 
@@ -55,6 +57,7 @@ namespace Kilim.Core
             e.BoosterPrice[Booster.Swap] = Data.Int(bp, "swap", e.BoosterPrice[Booster.Swap]);
             e.BoosterPrice[Booster.SingleStitch] = Data.Int(bp, "single", e.BoosterPrice[Booster.SingleStitch]);
 
+            IapTestStore = Data.Int(d, "iap_test_store", IapTestStore ? 1 : 0) == 1;
             ContinueAdEnabled = Data.Bool(d, "continue_ad_enabled", ContinueAdEnabled);
             InterFromLevel = Data.Int(d, "inter_from_level", InterFromLevel);
             InterGapLevels = Data.Int(d, "inter_gap_levels", InterGapLevels);

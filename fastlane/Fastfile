@@ -65,7 +65,23 @@ platform :ios do
                                  code_sign_identity: "Apple Distribution", profile_name: profile_name)
     update_code_signing_settings(path: project, use_automatic_signing: false, team_id: team, targets: ["UnityFramework"],
                                  code_sign_identity: "Apple Distribution")
-    build_app(project: project, scheme: "Unity-iPhone", configuration: "Release", export_method: "app-store",
+    # Google Mobile Ads CocoaPods ile gelir (EDM4U Podfile üretir): pod install → .xcworkspace.
+    # Kaynak paket hedefleri imza istemesin (manuel imzada "requires a development team" hatası).
+    dir = File.dirname(project)
+    podfile = File.join(dir, "Podfile")
+    workspace = nil
+    if File.exist?(podfile)
+      File.write(podfile, File.read(podfile) + <<~POD) unless File.read(podfile).include?("CODE_SIGNING_ALLOWED")
+        post_install do |installer|
+          installer.pods_project.targets.each do |t|
+            t.build_configurations.each { |c| c.build_settings["CODE_SIGNING_ALLOWED"] = "NO" }
+          end
+        end
+      POD
+      sh("cd '#{dir}' && pod install --repo-update")
+      workspace = Dir[File.join(dir, "*.xcworkspace")].first
+    end
+    build_app(workspace: workspace, project: (workspace ? nil : project), scheme: "Unity-iPhone", configuration: "Release", export_method: "app-store",
               export_options: { signingStyle: "manual", teamID: team,
                                 provisioningProfiles: { "app.kilim.game" => profile_name } })
     upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)

@@ -444,6 +444,49 @@ def intro_pages():
         img = Image.open(os.path.join(ART, area + '.png')).convert('RGBA')
         img.alpha_composite(nine, pos)
         img.convert('RGB').save(os.path.join(ART, name + '.png'))
+    _board_pages()
+
+
+def _board_pages():
+    """Tanıtım 2 (tezgâhta dokunan kilim, yarım) ve 3 (desen eşleşmesi + 3 yıldız): gerçek bölüm deseninden."""
+    import json
+    from PIL import Image, ImageDraw, ImageFilter
+    col = {'K': (192, 57, 43), 'L': (39, 60, 117), 'S': (230, 176, 58), 'Z': (96, 128, 56), 'M': (120, 44, 90)}
+    cand = json.load(open(os.path.join(ART, '..', 'levels', 'region1.json')))[:20]
+    def spread(l):   # en dengeli renk dağılımlı desen
+        cs = [v for row in l['motif'] for v in row if v]
+        return min(cs.count(k) for k in set(cs)) * len(set(cs)) if len(set(cs)) > 1 else 0
+    lv = max((l for l in cand if 5 <= l['size'] <= 7), key=spread)
+    n, mo = lv['size'], lv['motif']
+
+    def board(x0, y0, cell, filled):
+        d = ImageDraw.Draw(img)
+        d.rounded_rectangle([x0 - 18, y0 - 18, x0 + n * cell + 18, y0 + n * cell + 18], 18, fill=(120, 74, 40), outline=(70, 40, 22), width=6)
+        for r in range(n):
+            for c in range(n):
+                v, x, y = mo[r][c], x0 + c * cell, y0 + r * cell
+                if v is None: d.rectangle([x, y, x + cell - 2, y + cell - 2], fill=(60, 40, 28)); continue
+                on = filled(r, c)
+                f = col.get(v, (200, 200, 200)) if on else tuple(int(a * .35 + 232 * .65) for a in col.get(v, (200, 200, 200)))
+                d.rounded_rectangle([x + 2, y + 2, x + cell - 3, y + cell - 3], 6, fill=f)
+                if on: d.line([x + 6, y + cell // 2, x + cell - 7, y + cell // 2], fill=tuple(min(255, a + 40) for a in f), width=2)
+        return d
+
+    def star(d, cx, cy, R, fill):
+        import math
+        pts = [(cx + (R if k % 2 == 0 else R * .45) * math.sin(k * math.pi / 5), cy - (R if k % 2 == 0 else R * .45) * math.cos(k * math.pi / 5)) for k in range(10)]
+        d.polygon(pts, fill=fill, outline=(150, 96, 20))
+
+    for name, filled, stars in (('intro_2', lambda r, c: r < n // 2 + 1, False), ('intro_3', lambda r, c: True, True)):
+        img = Image.open(os.path.join(ART, 'area_tezgah_new.png' if not stars else 'area_oda_new.png')).convert('RGBA').filter(ImageFilter.GaussianBlur(3))
+        img.alpha_composite(Image.new('RGBA', img.size, (30, 18, 10, 90)))
+        cell = 300 // n
+        d = board(512 - n * cell // 2, 256 - n * cell // 2 + (14 if stars else 0), cell, filled)
+        if stars:
+            for i, x in enumerate((432, 512, 592)): star(d, x, 48 if i != 1 else 36, 30 if i != 1 else 38, (246, 196, 60))
+        else:
+            d.rounded_rectangle([700, 330, 820, 380], 10, fill=col['K']); d.rounded_rectangle([760, 330, 820, 430], 10, fill=col['K'])
+        img.convert('RGB').save(os.path.join(ART, name + '.png'))
 
 
 if __name__ == '__main__':

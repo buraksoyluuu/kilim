@@ -26,7 +26,13 @@ namespace Kilim.Game
         private Action<string, string> _deferred;
         private readonly IIapService _fallback;   // mağaza ürünü henüz tanımlı değilse (beta) test mağazası
 
-        public UnityIapService(IIapService fallback = null) { _fallback = fallback; }
+        private readonly Func<bool> _fallbackAllowed;   // uzaktan ayar iap_test_store (yayında kapalı)
+
+        public UnityIapService(IIapService fallback = null, Func<bool> fallbackAllowed = null)
+        {
+            _fallback = fallback;
+            _fallbackAllowed = fallbackAllowed ?? (() => false);
+        }
 
         private bool Live(string sku)
         {
@@ -55,7 +61,7 @@ namespace Kilim.Game
 
         public void Purchase(string sku, Action<IapStatus, string> done)
         {
-            if (!Live(sku)) { if (_fallback != null) _fallback.Purchase(sku, done); else done(IapStatus.Failed, null); return; }
+            if (!Live(sku)) { if (_fallback != null && _fallbackAllowed()) _fallback.Purchase(sku, done); else done(IapStatus.Failed, null); return; }
             _inFlight = done;
             _store.InitiatePurchase(sku);
         }
@@ -119,13 +125,32 @@ namespace Kilim.Game
     /// <summary>AdMob (mediation). Test ID'leri Google'ın herkese açık test birimleridir; yayında değiştir.</summary>
     public sealed class AdMobAdService : IAdService
     {
+// Birim kimlikleri build anında Resources/ads.json'a yazılır (BuildScript.ConfigureAds, CI secret'ları);
+        // yoksa Google'ın herkese açık test birimleri kullanılır.
+        private static readonly string RewardedId = Unit("rewarded",
 #if UNITY_ANDROID
-        private const string RewardedId = "ca-app-pub-3940256099942544/5224354917";
-        private const string InterstitialId = "ca-app-pub-3940256099942544/1033173712";
+            "ca-app-pub-3940256099942544/5224354917");
 #else
-        private const string RewardedId = "ca-app-pub-3940256099942544/1712485313";
-        private const string InterstitialId = "ca-app-pub-3940256099942544/4411468910";
+            "ca-app-pub-3940256099942544/1712485313");
 #endif
+        private static readonly string InterstitialId = Unit("interstitial",
+#if UNITY_ANDROID
+            "ca-app-pub-3940256099942544/1033173712");
+#else
+            "ca-app-pub-3940256099942544/4411468910");
+#endif
+
+        private static string Unit(string kind, string test)
+        {
+            var t = Resources.Load<TextAsset>("ads");
+#if UNITY_ANDROID
+            var key = "android_" + kind;
+#else
+            var key = "ios_" + kind;
+#endif
+            var m = t == null ? null : System.Text.RegularExpressions.Regex.Match(t.text, "\"" + key + "\"\\s*:\\s*\"([^\"]+)\"");
+            return m != null && m.Success ? m.Groups[1].Value : test;
+        }
         private RewardedAd _rewarded;
         private InterstitialAd _inter;
         private bool _personalized;
@@ -133,6 +158,9 @@ namespace Kilim.Game
         public void Initialize(bool personalized, bool underAge)
         {
             _personalized = personalized && !underAge;
+#pragma warning disable 618
+            MobileAds.RaiseAdEventsOnUnityMainThread = true;   // geri çağrılar UI'ye dokunuyor
+#pragma warning restore 618
             MobileAds.SetRequestConfiguration(new RequestConfiguration
             {
                 TagForUnderAgeOfConsent = underAge ? TagForUnderAgeOfConsent.True : TagForUnderAgeOfConsent.False,

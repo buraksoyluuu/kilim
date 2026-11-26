@@ -6,7 +6,15 @@
         "UnityEngine.Purchasing",
         "UnityEngine.Purchasing.Stores",
         "UnityEngine.Purchasing.Common",
-        "Unity.Services.Core"
+        "Unity.Services.Core",
+        "GoogleMobileAds",
+        "GoogleMobileAds.Api",
+        "GoogleMobileAds.Core",
+        "GoogleMobileAds.Common",
+        "GoogleMobileAds.Ump",
+        "GoogleMobileAds.Ump.Api",
+        "GoogleMobileAds.Ump.Core",
+        "Unity.Advertisement.IosSupport"
     ],
     "autoReferenced": true
 }

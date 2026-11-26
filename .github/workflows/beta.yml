@@ -74,6 +74,9 @@ jobs:
         with:
           path: Unity/Kilim/Library
           key: Library-Android-${{ hashFiles('Unity/Kilim/Packages/manifest.json') }}
+      - name: AdMob kimlikleri (secret yoksa test kimlikleri)
+        env: { ADS: "${{ secrets.ADMOB_JSON }}" }
+        run: '[ -n "$ADS" ] && printf "%s" "$ADS" > Unity/Kilim/Assets/Kilim/Resources/ads.json || true'
       - if: steps.want.outputs.go == 'true'
         uses: game-ci/unity-builder@v4
         env:
@@ -115,6 +118,9 @@ jobs:
         with:
           path: Unity/Kilim/Library
           key: Library-iOS-${{ hashFiles('Unity/Kilim/Packages/manifest.json') }}
+      - name: AdMob kimlikleri (secret yoksa test kimlikleri)
+        env: { ADS: "${{ secrets.ADMOB_JSON }}" }
+        run: '[ -n "$ADS" ] && printf "%s" "$ADS" > Unity/Kilim/Assets/Kilim/Resources/ads.json || true'
       - uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
