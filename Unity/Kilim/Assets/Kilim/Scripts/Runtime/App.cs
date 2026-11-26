@@ -55,6 +55,7 @@ namespace Kilim.Game
             LoadProfile();
             Analytics = new Analytics(new DebugAnalyticsSink(), () => Meta?.Profile);
 #if KILIM_ADMOB
+            AdMobAdService.TestMode = () => Meta != null && Meta.Config.AdsTestMode;
             Ads = new AdMobAdService();
             Consent = new UmpConsentService();
 #else

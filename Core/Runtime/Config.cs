@@ -30,6 +30,8 @@ namespace Kilim.Core
         public int TeenMonthlySpendNoticeUsd = 100;
         /// <summary>Mağazada tanımlı olmayan ürün test mağazasına düşsün mü (yalnızca beta; yayında 0).</summary>
         public bool IapTestStore;
+        /// <summary>Reklamlarda Google test birimleri (beta). Yayında 0.</summary>
+        public bool AdsTestMode;
 
         public static GameConfig Default => new GameConfig();
 
@@ -70,6 +72,7 @@ namespace Kilim.Core
                 foreach (var k in off.Split(','))
                     if (System.Enum.TryParse<NotifKind>(k.Trim(), true, out var nk)) nc.Off.Add(nk);
             }
+            AdsTestMode = Data.Int(d, "ads_test_mode", AdsTestMode ? 1 : 0) == 1;
             IapTestStore = Data.Int(d, "iap_test_store", IapTestStore ? 1 : 0) == 1;
             ContinueAdEnabled = Data.Bool(d, "continue_ad_enabled", ContinueAdEnabled);
             InterFromLevel = Data.Int(d, "inter_from_level", InterFromLevel);

@@ -12,21 +12,26 @@ namespace Kilim.Game
     {
 // Birim kimlikleri build anında Resources/ads.json'a yazılır (BuildScript.ConfigureAds, CI secret'ları);
         // yoksa Google'ın herkese açık test birimleri kullanılır.
-        private static readonly string RewardedId = Unit("rewarded",
+        private static string RewardedId => Unit("rewarded",
 #if UNITY_ANDROID
             "ca-app-pub-3940256099942544/5224354917");
 #else
             "ca-app-pub-3940256099942544/1712485313");
 #endif
-        private static readonly string InterstitialId = Unit("interstitial",
+        private static string InterstitialId => Unit("interstitial",
 #if UNITY_ANDROID
             "ca-app-pub-3940256099942544/1033173712");
 #else
             "ca-app-pub-3940256099942544/4411468910");
 #endif
 
+        /// <summary>Beta/test döneminde gerçek birim yerine Google test birimi (uzaktan ayar ads_test_mode=1).
+        /// Kendi gerçek reklamına tıklamak AdMob politikasına aykırı; yayına kadar açık kalır.</summary>
+        public static Func<bool> TestMode = () => false;
+
         private static string Unit(string kind, string test)
         {
+            if (TestMode()) return test;
             var t = Resources.Load<TextAsset>("ads");
 #if UNITY_ANDROID
             var key = "android_" + kind;
