@@ -34,6 +34,7 @@ namespace Kilim.Game
         private string _ghostColor;
 
         private RectTransform _trayRow, _bonusRow;
+        private float _traySize = 228;
         private readonly List<TraySlotView> _slots = new List<TraySlotView>();
         private Text _remaining, _percent, _star2, _star3;
         private System.Action<float> _bar;
@@ -62,7 +63,10 @@ namespace Kilim.Game
             _hintText = Ui.Label(v, "", 36, Theme.Ink, TextAnchor.MiddleCenter, false, 64);
             BuildBoard(v);
             _remaining = Ui.Label(v, "", 32, Theme.Muted, TextAnchor.MiddleCenter, true, 46);
-            _trayRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, 236, "Tray");
+            // Uzun telefonlar (iPhone 1170×2532 → ~2340 birim): fazla yükseklik tezgâha gider, parçalar irileşir.
+            float extra = Mathf.Clamp(1080f * Screen.height / Mathf.Max(1, Screen.width) - 2000f, 0, 420);
+            _traySize = 228 + extra * 0.4f;
+            _trayRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, _traySize + 8, "Tray");
             _bonusRow = Ui.HStack(v, 14, 0, TextAnchor.MiddleCenter, 120, "Bonus");
             _boosterRow = Ui.HStack(v, 16, 0, TextAnchor.MiddleCenter, 160, "Boosters");
             Ui.Spacer(v);
@@ -344,7 +348,7 @@ namespace Kilim.Game
 
         private void BuildTray()
         {
-            for (int i = 0; i < GameSession.TraySlots; i++) _slots.Add(TraySlotView.Create(_trayRow, this, i, 228));
+            for (int i = 0; i < GameSession.TraySlots; i++) _slots.Add(TraySlotView.Create(_trayRow, this, i, _traySize));
             for (int i = 0; i < GameSession.BonusSlots; i++)
                 _slots.Add(TraySlotView.Create(_bonusRow, this, GameSession.TraySlots + i, 112));
             if (App.Profile.LeftHanded) // sol el modu: tezgâh ve güçlendiriciler aynalanır (şekiller değil, sıra)
@@ -422,7 +426,15 @@ namespace Kilim.Game
             _streak = full ? _streak + 1 : 0;
             var center = CellCenter(res.Cells[res.Cells.Count / 2]);
             if (res.MatchedCells > 0)
-                Fx.FloatText(_board, center, _streak >= 2 ? Praise[Mathf.Min(_streak - 2, Praise.Length - 1)] : $"+{res.MatchedCells}", Theme.Gold, _streak >= 2 ? 64 : 54);
+            {
+                Fx.FloatText(_board, center, $"+{res.MatchedCells}", Theme.Gold, 58);
+                Fx.Confetti(_board, center, 10 + res.MatchedCells * 3, 0.45f);
+            }
+            if (_streak >= 2)
+            {
+                Fx.FloatText(_board, new Vector2(0, 60), Praise[Mathf.Min(_streak - 2, Praise.Length - 1)], Theme.Primary, 96);
+                Audio.Play("star1", 0.7f);
+            }
 
             int starsNow = CurrentStars();
             if (starsNow > starsBefore && starsNow > _starsShown)
@@ -457,6 +469,7 @@ namespace Kilim.Game
             BoosterButton(Booster.Undo, "Geri Al", "undo");
             BoosterButton(Booster.Swap, _swapMode ? "Vazgeç" : "Değiştir", "swap");
             BoosterButton(Booster.SingleStitch, "Tek İlmek", "stitch");
+            _boosterRow.gameObject.SetActive(_boosterRow.childCount > 0);
         }
 
         private void BoosterButton(Booster b, string name, string icon)
@@ -464,6 +477,8 @@ namespace Kilim.Game
             var w = App.Meta.Wallet;
             var cfg = App.Config.Economy;
             bool unlocked = w.IsUnlocked(b) || w.BoosterCount(b) > 0;
+            // Kilitli güçlendirici gösterilmez (oyuncu: "oyunun yarısı kapalı"); açıldığı bölümde tanıtılır.
+            if (!unlocked) return;
             bool active = b == Booster.Swap && _swapMode;
             var bg = active ? Theme.Gold : unlocked ? Theme.Panel : Theme.Neutral;
             var btn = Ui.Button(_boosterRow, "", () => OnBoosterTap(b), bg, Theme.Ink, 156, 30);
@@ -632,7 +647,11 @@ namespace Kilim.Game
                     var col = img.color;
                     Fx.Tint(img, Color.Lerp(col, Color.white, 0.6f), col, 0.5f, Ease.OutQuad, d);
                 }
-            App.Delay(0.045f * 2 * n, () => Fx.Confetti(App.Nav.Overlay, new Vector2(0, -100), 60));
+            App.Delay(0.045f * 2 * n, () =>
+            {
+                Fx.Confetti(App.Nav.Overlay, new Vector2(0, -100), 70);
+                Fx.FloatText(_board, new Vector2(0, 40), "Kilim tamamlandı!", Theme.Primary, 92);
+            });
         }
 
         /// <summary>Devam alındıktan sonra oyuna dönüş.</summary>
@@ -771,7 +790,7 @@ namespace Kilim.Game
             Ui.Clear(_content);
             var p = _game.PieceAt(_slot);
             if (p == null || _dragging) { _last = p; return; }
-            float cell = Mathf.Min((_size - 28) / Mathf.Max(p.Shape.Width, p.Shape.Height), _size / 4.2f);
+            float cell = Mathf.Min((_size - 28) / Mathf.Max(p.Shape.Width, p.Shape.Height), _size / 3.4f);
             PieceRenderer.Draw(_content, p.Shape, p.Color, cell, cell * 0.08f);
             if (_last != null && !ReferenceEquals(_last, p)) PopIn(); // yeni gelen parça
             _last = p;

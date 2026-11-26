@@ -77,6 +77,7 @@ namespace Kilim.Game
         {
             // Genel
             // v0.5: his, harita, ev, tanıtım
+            { "Kilim tamamlandı!", "Kilim complete!" }, { "Tekrar dene", "Try again" },
             { "Canların bitti", "Out of lives" }, { "{0} canın var", "You have {0} lives" }, { "Canlar doldu!", "Lives refilled!" },
             { "Canların dolu. Kazandığın bölümde can harcanmaz.", "Lives are full. Winning a level doesn't cost a life." },
             { "Sonraki can: {0} · Hepsi: {1}", "Next life: {0} · All: {1}" }, { "Hepsini doldur · ● {0}", "Refill all · ● {0}" },

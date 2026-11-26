@@ -239,7 +239,9 @@ namespace Kilim.Game
             }
             catch (Exception e) { Debug.LogWarning(e); }
 
-            // 2) Devam paketi (merdiven): +2 Tek İlmek ve +1 Değiştir.
+            // 2) Devam paketi (merdiven): +2 Tek İlmek ve +1 Değiştir. İlk 10 bölümde ücretli devam gösterilmez.
+            bool early = run.Level.Id <= 10;
+            if (!early)
             try
             {
                 void Done(string how)
@@ -284,8 +286,10 @@ namespace Kilim.Game
             catch (Exception e) { Debug.LogWarning(e); }
 
             // 3) Her zaman: yeniden başla ve ana menü (etik kural: eşit boy, her durumda görünür).
+            if (early)
+                Ui.Button(card, "Tekrar dene", () => { Close(); app.Meta.GiveUp(run); app.Save(); app.StartLevel(run.Level.Id); }, Theme.Primary, Color.white, 130, 46);
             var exits = Ui.HStack(card, 16, 0, TextAnchor.MiddleCenter, 120);
-            Ui.Button(exits, "Yeniden başla", () => { Close(); GiveUpConfirm(run, game, restart: true); }, Theme.Neutral, Theme.Ink, 120, 38);
+            if (!early) Ui.Button(exits, "Yeniden başla", () => { Close(); GiveUpConfirm(run, game, restart: true); }, Theme.Neutral, Theme.Ink, 120, 38);
             Ui.Button(exits, "Ana menü", () => { Close(); GiveUpConfirm(run, game, restart: false); }, Theme.Neutral, Theme.Ink, 120, 38);
         }
 

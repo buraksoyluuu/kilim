@@ -127,8 +127,9 @@ namespace Kilim.Game
             ((RectTransform)inner).Stretch(8, 4, 8, 14);
             var ic = Ui.Icon(inner, Art.Icon(icon), 70, Theme.Primary);
             Ui.Size(ic.gameObject, 70, 70, 0);
-            var t = Ui.Label(inner, title, 38, Theme.Ink, TextAnchor.MiddleLeft, true);
-            Ui.Size(t.gameObject, 170, 100, 0);
+            var t = Ui.Label(inner, title, 36, Theme.Ink, TextAnchor.MiddleLeft, true);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Ui.Size(t.gameObject, 190, 100, 0);
             if (attention) { Ui.Badge(b.transform, "!", Theme.Primary); Fx.Pulse(b.targetGraphic, Theme.Panel, Theme.WithAlpha(Theme.Gold, 0.8f), 1.2f); }
         }
 
@@ -202,7 +203,8 @@ namespace Kilim.Game
             else Ui.Size(frame.gameObject, -1, 520);
             var pic = Ui.Rect(frame.transform, "Pic").Stretch(14, 14, 14, 96);
             pic.gameObject.AddComponent<RectMask2D>();
-            Area(pic, house, area, Home.DoneInArea(p, house, area) / 4f);
+            // Ana ekranda kasvetli görünmesin: onarılmış hâl ağırlıklı (bakımsız katman en fazla %45 görünür).
+            Area(pic, house, area, Mathf.Max(0.55f, Home.DoneInArea(p, house, area) / 4f));
             var cap = Ui.HStack(frame.transform, 14, 0, TextAnchor.MiddleLeft);
             cap.GetComponent<HorizontalLayoutGroup>().childForceExpandWidth = false;
             var crt = (RectTransform)cap;
