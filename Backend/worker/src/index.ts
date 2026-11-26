@@ -1,3 +1,4 @@
+import { privacyPage } from './privacy';
 // Kilim backend: Cloudflare Worker + D1. Kimlik: Firebase Anonymous Auth ID token (ücretsiz Spark planı).
 // İstemci: Unity/Kilim/Assets/Kilim/Scripts/Runtime/Backend.cs — uçlar Backend/README.md'de.
 import { D1Store } from './d1store';
@@ -67,6 +68,8 @@ export default {
     const path = url.pathname.replace(/\/+$/, '') || '/';
     const store = new D1Store(env.DB);
     try {
+      if (req.method === 'GET' && (path === '/privacy' || path === '/gizlilik'))
+        return privacyPage(url.searchParams.get('lang') ?? (path === '/privacy' && !(req.headers.get('accept-language') ?? '').startsWith('tr') ? 'en' : 'tr'));
       // Mağaza bildirimleri (kimliksiz; içerik Apple/Google API'sinden yeniden doğrulanır)
       if (req.method === 'POST' && path === '/notify/apple') return json(await appleNotification(env, store, await req.json()));
       if (req.method === 'POST' && path === '/notify/google') {
