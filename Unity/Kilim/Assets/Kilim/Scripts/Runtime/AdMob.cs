@@ -101,15 +101,21 @@ namespace Kilim.Game
         {
             ConsentInformation.Update(new ConsentRequestParameters(), err =>
             {
-                _required = err == null && ConsentInformation.ConsentStatus == ConsentStatus.Required;
+                // AEA/İngiltere: rıza verildikten sonra da geri çekme girişi (gizlilik seçenekleri) gösterilmeli.
+                _required = err == null && (ConsentInformation.ConsentStatus == ConsentStatus.Required
+                    || ConsentInformation.PrivacyOptionsRequirementStatus == PrivacyOptionsRequirementStatus.Required);
             });
         }
 
         public bool UmpRequired => _required;
 
-        public void ShowUmpForm(Action<bool> personalizedAllowed) =>
-            ConsentForm.LoadAndShowConsentFormIfRequired(err =>
-                personalizedAllowed(err == null && ConsentInformation.CanRequestAds()));
+        public void ShowUmpForm(Action<bool> personalizedAllowed)
+        {
+            if (ConsentInformation.ConsentStatus == ConsentStatus.Required)
+                ConsentForm.LoadAndShowConsentFormIfRequired(err => personalizedAllowed(err == null && ConsentInformation.CanRequestAds()));
+            else
+                ConsentForm.ShowPrivacyOptionsForm(err => personalizedAllowed(err == null && ConsentInformation.CanRequestAds()));
+        }
 
 #if UNITY_IOS
         public bool AttSupported => true;

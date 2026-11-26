@@ -273,8 +273,9 @@ namespace Kilim.Game
                 app.Save();
             });
             if (p.Age == AgeBand.Adult && app.Consent.UmpRequired)
-                Ui.Button(list, "Reklam tercihleri (UMP)", () => app.Consent.ShowUmpForm(on => { p.UmpDone = on; app.InitSdksAfterConsent(on); app.Save(); }), Theme.Neutral, Theme.Ink, 110, 40);
+                Ui.Button(list, "Reklam gizlilik seçenekleri", () => app.Consent.ShowUmpForm(on => { p.UmpDone = on; app.InitSdksAfterConsent(on); app.Save(); }), Theme.Neutral, Theme.Ink, 110, 40);
             Ui.Button(list, "Aydınlatma metni", () => ConsentScreen.KvkkText(app), Theme.Neutral, Theme.Ink, 110, 40);
+            Ui.Button(list, "Gizlilik politikası", () => Application.OpenURL("https://kilim-api.kilimgame.workers.dev/privacy?lang=" + Loc.Lang), Theme.Neutral, Theme.Ink, 110, 40);
             Ui.Button(list, "Verilerimi sil", () => app.Nav.Confirm("Verilerin silinsin mi?",
                 "İlerlemen, coin'lerin ve ayarların bu cihazdan ve sunucudan (30 gün içinde) silinir. Satın alımlar mağazadan geri yüklenebilir.",
                 "Sil", app.DeleteAllData, "Vazgeç", null), Theme.WithAlpha(Theme.Primary, 0.2f), Theme.Primary, 110, 40);

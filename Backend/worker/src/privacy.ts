@@ -16,7 +16,7 @@ const tr = `
 <li><b>Haftalık yarış:</b> yarışa katılırsanız sıralamada oyun içinde seçilen takma ad ve puan diğer oyunculara görünür.</li>
 </ul>
 <h2>2. Reklamlar ve rıza</h2>
-<p>Oyun, reklam göstermek için Google AdMob kullanır. AEA, Birleşik Krallık ve İsviçre'deki kullanıcılardan kişiselleştirilmiş reklam için Google'ın rıza formu (UMP) aracılığıyla izin istenir; iOS'ta takip izni (ATT) ayrıca sorulur. Rıza vermezseniz kişiselleştirilmemiş reklam gösterilir. Tercihinizi oyunda <i>Ayarlar › Gizlilik ve rıza</i> bölümünden değiştirebilirsiniz. Google'ın verileri nasıl kullandığı: <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a>.</p>
+<p>Oyun, reklam göstermek için Google AdMob kullanır. AEA, Birleşik Krallık ve İsviçre'deki kullanıcılardan kişiselleştirilmiş reklam için Google'ın rıza formu (UMP) aracılığıyla izin istenir; iOS'ta takip izni (ATT) ayrıca sorulur. Rıza vermezseniz kişiselleştirilmemiş reklam gösterilir. Tercihinizi oyunda <i>Ayarlar › Reklam gizlilik seçenekleri</i> bölümünden değiştirebilirsiniz. Google'ın verileri nasıl kullandığı: <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a>.</p>
 <p>18 yaş altı olduğunu belirten oyunculara kişiselleştirilmiş reklam gösterilmez, satış içerikli bildirim gönderilmez ve harcama uyarıları uygulanır.</p>
 <h2>3. Bildirimler</h2>
 <p>Bildirimler cihazınızda yerel olarak planlanır (can doldu, günün deseni vb.); bunun için sunucuya veri gönderilmez. Oyunda <i>Ayarlar › Bildirimler</i> veya telefon ayarlarından kapatabilirsiniz.</p>
@@ -47,7 +47,7 @@ const en = `
 <li><b>Weekly race:</b> if you join, your in-game nickname and score are visible to other players.</li>
 </ul>
 <h2>2. Ads and consent</h2>
-<p>The Game uses Google AdMob. Users in the EEA, UK and Switzerland are asked for consent via Google's consent form (UMP); on iOS the App Tracking Transparency prompt is also shown. Without consent, non-personalised ads are shown. You can change your choice in <i>Settings › Privacy &amp; consent</i>. How Google uses data: <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a>.</p>
+<p>The Game uses Google AdMob. Users in the EEA, UK and Switzerland are asked for consent via Google's consent form (UMP); on iOS the App Tracking Transparency prompt is also shown. Without consent, non-personalised ads are shown. You can change your choice in <i>Settings › Ad privacy options</i>. How Google uses data: <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a>.</p>
 <p>Players who indicate they are under 18 receive no personalised ads and no sales-related notifications, and spending reminders apply.</p>
 <h2>3. Notifications</h2>
 <p>Notifications are scheduled locally on your device (lives refilled, daily pattern, etc.); no data is sent to our server for this. Turn them off in <i>Settings › Notifications</i> or in your phone settings.</p>

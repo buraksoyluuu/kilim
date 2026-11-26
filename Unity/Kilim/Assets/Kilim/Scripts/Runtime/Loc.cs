@@ -252,7 +252,7 @@ namespace Kilim.Game
             { "Günlük desen bildirimi", "Daily pattern reminder" }, { "Dil: Türkçe", "Language: Turkish" }, { "Dil: English", "Language: English" },
             { "Bulut kayıt (Game Center / Play Games)", "Cloud save (Game Center / Play Games)" },
             { "Bulut kayıt bu sürümde test modunda.", "Cloud save is in test mode in this build." }, { "Destek", "Support" }, { "Gizlilik", "Privacy" },
-            { "Analitik (KVKK açık rıza)", "Analytics (explicit consent)" }, { "Reklam tercihleri (UMP)", "Ad preferences (UMP)" },
+            { "Analitik (KVKK açık rıza)", "Analytics (explicit consent)" }, { "Reklam gizlilik seçenekleri", "Ad privacy options" }, { "Gizlilik politikası", "Privacy policy" },
             { "Verilerimi sil", "Delete my data" }, { "Verilerin silinsin mi?", "Delete your data?" },
             { "İlerlemen, coin'lerin ve ayarların bu cihazdan ve sunucudan (30 gün içinde) silinir. Satın alımlar mağazadan geri yüklenebilir.",
               "Your progress, coins and settings will be deleted from this device and our servers (within 30 days). Purchases can be restored from the store." },
