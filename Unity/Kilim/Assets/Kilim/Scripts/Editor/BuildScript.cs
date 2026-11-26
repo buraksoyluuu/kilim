@@ -19,7 +19,8 @@ namespace Kilim.EditorTools
     /// </summary>
     public static class BuildScript
     {
-        public const string BundleId = "app.kilim.game";
+        public const string BundleId = "app.kilim.game";            // iOS (App Store'da kayıtlı)
+        public const string AndroidPackage = "com.kilimgames.kilim"; // Google Play (app.kilim.game Play'de başkasında)
         public const string ProductName = "Kilim";
         public const string Company = "Burak Soylu";
         private const string ScenePath = "Assets/Kilim/Scenes/Main.unity";
@@ -29,7 +30,7 @@ namespace Kilim.EditorTools
         {
             PlayerSettings.companyName = Company;
             PlayerSettings.productName = ProductName;
-            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, BundleId);
+            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, AndroidPackage);
             PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.iOS, BundleId);
             var version = Environment.GetEnvironmentVariable("KILIM_VERSION");
             PlayerSettings.bundleVersion = string.IsNullOrEmpty(version) ? "0.5.0" : version;

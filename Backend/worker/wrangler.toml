@@ -10,7 +10,7 @@ database_id = "ac8444c9-0524-445e-be77-1d79e9eedfcc"
 [vars]
 FIREBASE_PROJECT_ID = "kilim-game"
 APPLE_BUNDLE_ID = "app.kilim.game"
-ANDROID_PACKAGE = "app.kilim.game"
+ANDROID_PACKAGE = "com.kilimgames.kilim"
 APPLE_ENV = "Sandbox"                # yayında "Production"
 
 # Gizli değerler: wrangler secret put <AD>
