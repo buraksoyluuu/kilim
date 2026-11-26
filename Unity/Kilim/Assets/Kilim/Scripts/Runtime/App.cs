@@ -62,7 +62,7 @@ namespace Kilim.Game
             Consent = new MockConsentService(this);
 #endif
 #if KILIM_UNITY_IAP
-            Iap = new UnityIapService();
+            Iap = new UnityIapService(new MockIapService(this));
 #else
             Iap = new MockIapService(this);
 #endif

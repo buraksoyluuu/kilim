@@ -5,8 +5,11 @@ namespace Kilim.Core
     public sealed class LivesConfig
     {
         public int Max = 3;
-        /// <summary>Bir canın yenilenme süresi. 3 can × 60 dk = hepsi 3 saatte dolar.</summary>
-        public int RegenMinutes = 60;
+        /// <summary>
+        /// Toplu dolum süresi (saat): ilk can harcandığında sayaç başlar, süre dolunca TÜM canlar dolar.
+        /// Uzaktan ayarlanır (config: lives_refill_hours), koda dokunmadan 3 → 5 saat yapılabilir.
+        /// </summary>
+        public double RefillHours = 3;
         /// <summary>Canları coin ile hemen doldurma bedeli.</summary>
         public int RefillCoins = 900;
     }
@@ -14,7 +17,7 @@ namespace Kilim.Core
     /// <summary>
     /// Can sistemi (Candy Crush mantığı): bölüme başlamak 1 can harcar, kazanınca can geri verilir. Böylece
     /// kaybetmek, pes etmek ya da oyundan çıkmak 1 cana mal olur (uygulamayı kapatıp kaçmak da). Can 0 ise
-    /// bölüm başlamaz; her RegenMinutes'ta 1 can yenilenir. Hemen oynamak için: coin, satın alma ya da ödüllü reklam (+1).
+    /// bölüm başlamaz; ilk can harcandıktan RefillHours sonra hepsi birden dolar. Hemen oynamak için: coin, satın alma ya da ödüllü reklam (+1).
     /// Günün Deseni can harcamaz. Saat geri alınırsa sayaç baştan başlar (hile koruması; saat sunucudan doğrulanır).
     /// </summary>
     public sealed class Lives
@@ -31,46 +34,34 @@ namespace Kilim.Core
         }
 
         private DateTime Now => _clock.UtcNow;
-        private TimeSpan Regen => TimeSpan.FromMinutes(Config.RegenMinutes);
+        private TimeSpan RefillSpan => TimeSpan.FromHours(Config.RefillHours);
 
-        /// <summary>Zamanla yenilenen canları uygular.</summary>
+        /// <summary>Süre dolduysa canları toptan doldurur.</summary>
         private void Tick()
         {
             if (_p.Lives >= Config.Max) { _p.Lives = Config.Max; _p.LivesSinceUtc = 0; return; }
             var now = Now;
-            if (_p.LivesSinceUtc <= 0 || _p.LivesSinceUtc > now.Ticks) { _p.LivesSinceUtc = now.Ticks; return; }
-            var since = new DateTime(_p.LivesSinceUtc, DateTimeKind.Utc);
-            int gained = (int)((now - since).Ticks / Regen.Ticks);
-            if (gained <= 0) return;
-            _p.Lives = Math.Min(Config.Max, _p.Lives + gained);
-            _p.LivesSinceUtc = _p.Lives >= Config.Max ? 0 : since.AddTicks(Regen.Ticks * gained).Ticks;
+            if (_p.LivesSinceUtc <= 0 || _p.LivesSinceUtc > now.Ticks) { _p.LivesSinceUtc = now.Ticks; return; } // saat geri alındıysa baştan
+            if (now - new DateTime(_p.LivesSinceUtc, DateTimeKind.Utc) >= RefillSpan) { _p.Lives = Config.Max; _p.LivesSinceUtc = 0; }
         }
 
         public int Count { get { Tick(); return _p.Lives; } }
         public bool IsFull => Count >= Config.Max;
         public bool CanPlay => Count > 0;
 
-        /// <summary>Sıradaki canın gelmesine kalan süre (dolu ise sıfır).</summary>
-        public TimeSpan NextIn
+        /// <summary>Canların toplu dolmasına kalan süre (dolu ise sıfır).</summary>
+        public TimeSpan FullIn
         {
             get
             {
                 Tick();
                 if (_p.Lives >= Config.Max) return TimeSpan.Zero;
-                var left = new DateTime(_p.LivesSinceUtc, DateTimeKind.Utc) + Regen - Now;
+                var left = new DateTime(_p.LivesSinceUtc, DateTimeKind.Utc) + RefillSpan - Now;
                 return left < TimeSpan.Zero ? TimeSpan.Zero : left;
             }
         }
 
-        /// <summary>Hepsinin dolmasına kalan süre.</summary>
-        public TimeSpan FullIn
-        {
-            get
-            {
-                int missing = Config.Max - Count;
-                return missing <= 0 ? TimeSpan.Zero : NextIn + TimeSpan.FromTicks(Regen.Ticks * (missing - 1));
-            }
-        }
+        public TimeSpan NextIn => FullIn;
 
         /// <summary>Bölüm başı: 1 can harcar. Can yoksa false.</summary>
         public bool TryConsume()

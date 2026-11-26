@@ -362,10 +362,12 @@ namespace Kilim.Core.Tests
             Assert.Equal(0, m.Lives.Count);
             Assert.False(m.Lives.CanPlay);
             Assert.True(m.Lives.FullIn.TotalMinutes > 179 && m.Lives.FullIn.TotalMinutes <= 180, "3 saatte dolar");
-            clock.Advance(System.TimeSpan.FromMinutes(61));
-            Assert.Equal(1, m.Lives.Count, "1 saatte 1 can");
-            clock.Advance(System.TimeSpan.FromHours(5));
-            Assert.Equal(3, m.Lives.Count, "üst sınır 3");
+            clock.Advance(System.TimeSpan.FromHours(2));
+            Assert.Equal(0, m.Lives.Count, "süre dolmadan can yok");
+            clock.Advance(System.TimeSpan.FromHours(1.01));
+            Assert.Equal(3, m.Lives.Count, "3 saatte hepsi birden");
+            m.Config.Apply("{\"lives_refill_hours\": 5}");
+            Assert.Equal(5.0, m.Config.Lives.RefillHours, "uzaktan ayar");
             m.CompleteWin(WinLevel(m, Region1[0]));
             Assert.Equal(3, m.Lives.Count, "kazanınca iade");
         }

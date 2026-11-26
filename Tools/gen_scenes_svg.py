@@ -261,6 +261,191 @@ def render(svg_path, png_path):
         cairosvg.svg2png(url=svg_path, write_to=png_path, output_width=W, output_height=H)
 
 
+# ------------------------------------------------------------------ diğer mekânlar (kısa, ortak parçalarla)
+def outdoor(ground='url(#grass)', sun_x=860):
+    return (f'<rect width="{W}" height="{H}" fill="url(#sky)"/><circle cx="{sun_x}" cy="90" r="110" fill="url(#sun)"/>'
+            f'<path d="M0 290 Q300 220 600 280 T1024 250 V512 H0Z" fill="#A9C47A"/><rect y="372" width="{W}" height="140" fill="{ground}"/>')
+
+
+def stonewall(x, y, w, h):
+    return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="8" fill="url(#stone)"/>' + ''.join(
+        f'<path d="M{x} {y + k * 28} H{x + w}" stroke="#9A8A72" stroke-width="2" opacity=".6"/>' for k in range(1, int(h / 28)))
+
+
+def tree(x, y, s=1.0, fruit=None, r=True):
+    leaf = '#6B8A34' if r else '#6E6A4E'
+    out = shadow(x, y + 4, 90 * s, 12) + f'<path d="M{x - 10 * s} {y} Q{x - 6 * s} {y - 90 * s} {x - 4 * s} {y - 150 * s} H{x + 8 * s} Q{x + 10 * s} {y - 90 * s} {x + 14 * s} {y}Z" fill="url(#wood)"/>'
+    for dx, dy, rr in ((0, -190, 90), (-70, -150, 62), (70, -150, 62), (-35, -240, 56), (40, -236, 56)):
+        out += f'<circle cx="{x + dx * s}" cy="{y + dy * s}" r="{rr * s}" fill="{leaf}"/>'
+    if fruit and r:
+        out += ''.join(f'<circle cx="{x + dx * s}" cy="{y + dy * s}" r="{9 * s}" fill="{fruit}"/>' for dx, dy in ((-40, -170), (30, -200), (-10, -240), (60, -150), (-70, -140)))
+    return out
+
+
+def vine_row(y, r):
+    out = f'<path d="M0 {y} H{W}" stroke="#7C4E2A" stroke-width="5"/>'
+    for x in range(40, W, 110):
+        out += f'<ellipse cx="{x}" cy="{y - 24}" rx="52" ry="30" fill="{Z if r else "#77705A"}"/>'
+        if r: out += ''.join(f'<circle cx="{x - 8 + (k % 2) * 14}" cy="{y + 2 + k * 10}" r="8" fill="{M}"/>' for k in range(5))
+    return out
+
+
+def pot(x, y, s=1.0, col='url(#copper)'):
+    return shadow(x, y + 6, 50 * s, 8, .22) + f'<path d="M{x - 40 * s} {y} Q{x - 54 * s} {y - 70 * s} {x - 22 * s} {y - 96 * s} H{x + 22 * s} Q{x + 54 * s} {y - 70 * s} {x + 40 * s} {y}Z" fill="{col}"/><rect x="{x - 26 * s}" y="{y - 110 * s}" width="{52 * s}" height="16" rx="6" fill="{col}"/>'
+
+
+def hearth(x, y, fire):
+    out = f'<path d="M{x - 120} {y} V{y - 220} H{x + 120} V{y}Z" fill="url(#stone)"/><path d="M{x - 80} {y} V{y - 120} Q{x} {y - 190} {x + 80} {y - 120} V{y}Z" fill="#2E2018"/>'
+    if fire: out += f'<circle cx="{x}" cy="{y - 50}" r="90" fill="url(#glow)"/><path d="M{x - 40} {y} Q{x - 30} {y - 70} {x} {y - 96} Q{x + 30} {y - 70} {x + 40} {y}Z" fill="#F08A30"/><path d="M{x - 18} {y} Q{x - 10} {y - 40} {x + 2} {y - 56} Q{x + 14} {y - 40} {x + 20} {y}Z" fill="#FFD25A"/>'
+    return out
+
+
+def sheep(x, y):
+    return shadow(x, y + 30, 50, 8, .2) + ''.join(f'<circle cx="{x + dx}" cy="{y + dy}" r="26" fill="#FBF8F1"/>' for dx, dy in ((-22, 0), (0, -14), (22, 0), (0, 8))) + f'<ellipse cx="{x + 46}" cy="{y - 8}" rx="18" ry="14" fill="#3A2E28"/><path d="M{x - 24} {y + 22} V{y + 44} M{x + 20} {y + 22} V{y + 44}" stroke="#3A2E28" stroke-width="6"/>'
+
+
+def tent(x, y, w, h, r):
+    col = '#3A2E28' if r else '#5E5246'
+    out = shadow(x, y + 8, w / 2, 14) + f'<path d="M{x - w / 2} {y} L{x} {y - h} L{x + w / 2} {y}Z" fill="{col}"/><path d="M{x - w * .1} {y} L{x} {y - h * .45} L{x + w * .1} {y}Z" fill="#1E1612"/>'
+    if r: out += f'<rect x="{x - w * .34}" y="{y - h * .3}" width="{w * .68}" height="30" fill="url(#band)"/>'
+    return out
+
+
+def column(x, y0, y1, r):
+    c = '#FBF8F1' if r else '#B9B0A2'
+    return f'<rect x="{x - 18}" y="{y0}" width="36" height="{y1 - y0}" fill="{c}"/><rect x="{x - 28}" y="{y0 - 12}" width="56" height="14" rx="4" fill="{c}"/><rect x="{x - 28}" y="{y1}" width="56" height="14" rx="4" fill="{c}"/>'
+
+
+def pool(x, y, w, r):
+    out = f'<ellipse cx="{x}" cy="{y}" rx="{w / 2 + 24}" ry="70" fill="url(#stone)"/><ellipse cx="{x}" cy="{y - 4}" rx="{w / 2}" ry="50" fill="{"#7DB7DD" if r else "#9A8E78"}"/>'
+    if r: out += f'<path d="M{x - 4} {y - 4} V{y - 150} M{x + 4} {y - 4} V{y - 150}" stroke="#BFE2F4" stroke-width="5"/><ellipse cx="{x}" cy="{y - 160}" rx="44" ry="20" fill="#D8EEF8"/>'
+    return out
+
+
+def yol(r):
+    s = outdoor() + f'<path d="M420 512 Q500 430 560 372 H640 Q620 430 700 512Z" fill="{"#D9C29A" if r else "#A89C84"}"/>'
+    s += stonewall(0, 290, 380 if r else 200, 90)
+    s += f'<path d="M760 380 V200 H990 V380Z" fill="url(#stone)"/><path d="M800 380 V250 Q875 190 950 250 V380Z" fill="{"url(#wood)" if r else "#6B5A4A"}"/>'
+    if r: s += tree(160, 300, .7) + tree(300, 290, .6) + plant(700, 430, K, .6) + plant(1000, 450, '#FFFFFF', .5)
+    return s
+
+
+def bag(r):
+    s = outdoor('#B49A5E') + vine_row(330, r) + vine_row(420, r) + vine_row(500, r)
+    if r: s += f'<path d="M880 330 V180 M820 230 H940" stroke="url(#wood)" stroke-width="10"/><circle cx="880" cy="160" r="26" fill="#F1D7B4"/><path d="M840 150 H920 L880 100Z" fill="{K}"/><path d="M846 230 H914 L900 320 H860Z" fill="{L}"/>'
+    return s
+
+
+def pekmez(r):
+    s = room('url(#wallK)') + hearth(800, 360, r)
+    if r: s += f'<ellipse cx="800" cy="200" rx="70" ry="18" fill="#2E2018"/><path d="M732 200 Q736 266 800 268 Q864 266 868 200Z" fill="url(#copper)"/>'
+    s += shadow(330, 470, 230, 14) + f'<rect x="120" y="340" width="420" height="110" rx="20" fill="url(#wood)"/>'
+    if r: s += f'<rect x="140" y="350" width="380" height="40" rx="14" fill="{M}"/>' + pot(250, 500, .6, '#9A4A3A') + pot(360, 500, .6, '#9A4A3A') + pot(470, 500, .6, '#9A4A3A')
+    return s
+
+
+def seki(r):
+    s = outdoor() + shadow(512, 470, 380, 16) + f'<rect x="140" y="330" width="740" height="140" rx="20" fill="{"#E8D2AE" if r else "#B8AA94"}"/>'
+    if r:
+        s += f'<rect x="170" y="300" width="680" height="44" rx="14" fill="url(#kilim)"/>'
+        s += f'<path d="M150 330 V130 M870 330 V130 M130 130 H890" stroke="url(#wood)" stroke-width="14"/>'
+        s += ''.join(f'<ellipse cx="{x}" cy="128" rx="44" ry="24" fill="{Z}"/>' for x in range(170, 880, 70))
+        s += pot(760, 300, .5)
+    return s
+
+
+def ambar(r):
+    s = outdoor('#B49A5E') + shadow(512, 400, 340, 16) + f'<rect x="230" y="180" width="560" height="220" fill="{"url(#wood)" if r else "#7A6656"}"/>'
+    s += f'<path d="M190 190 L510 60 L830 190Z" fill="{K if r else "#6E5A4A"}"/><rect x="440" y="260" width="140" height="140" fill="#5C381C"/>'
+    if r: s += ''.join(f'<rect x="{820 + (i % 2) * 70}" y="{420 - (i // 2) * 64}" width="62" height="58" rx="18" fill="#E8D2AE"/>' for i in range(4)) + f'<path d="M510 120 L530 140 L510 160 L490 140Z" fill="{L}"/>'
+    return s
+
+
+def oba(r):
+    s = outdoor('#8FB45A') + tent(400, 420, 560, 320, r)
+    if r: s += rug(700, 400, 260, 70) + tent(860, 380, 240, 160, r)
+    return s
+
+
+def ahir(r):
+    s = outdoor('#A9A060') + shadow(300, 400, 240, 14) + f'<rect x="80" y="200" width="440" height="200" fill="{"url(#wood)" if r else "#7A6656"}"/><path d="M50 210 L300 90 L550 210Z" fill="#7C4E2A"/><rect x="250" y="270" width="100" height="130" fill="#5C381C"/>'
+    if r: s += sheep(660, 430) + sheep(800, 450) + sheep(920, 420) + ''.join(f'<rect x="{560 + i * 40}" y="{320 - i * 40}" width="140" height="50" rx="16" fill="{S}"/>' for i in range(3))
+    return s
+
+
+def ocak(r):
+    s = outdoor('#9AA66A') + hearth(330, 420, r)
+    if r: s += pot(660, 440, .9) + pot(820, 450, .7, '#E8D2AE') + rug(560, 450, 360, 50)
+    return s
+
+
+def cayir(r):
+    s = outdoor('url(#grass)')
+    if r:
+        rnd = random.Random(5)
+        s += ''.join(f'<circle cx="{rnd.uniform(0, W):.0f}" cy="{rnd.uniform(390, 505):.0f}" r="7" fill="{rnd.choice([K, "#FFFFFF", M, S])}"/>' for _ in range(110))
+        s += f'<path d="M0 380 H520" stroke="url(#wood)" stroke-width="10"/>' + ''.join(f'<rect x="{x}" y="330" width="14" height="70" fill="url(#wood)"/>' for x in range(20, 520, 70))
+        s += f'<path d="M720 380 V170 M880 380 V170 M700 170 H900" stroke="url(#wood)" stroke-width="12"/><path d="M760 170 V320 M840 170 V320" stroke="#3A2A20" stroke-width="4"/><rect x="740" y="318" width="120" height="16" rx="6" fill="url(#wood)"/>'
+        s += f'<path d="M960 380 V150" stroke="url(#wood)" stroke-width="8"/><path d="M964 154 L1020 174 L964 196Z" fill="{K}"/>'
+    else:
+        s += f'<path d="M0 380 H200" stroke="#6B5A4A" stroke-width="10"/>'
+    return s
+
+
+def kaynak(r):
+    s = outdoor('#8FB45A') + f'<path d="M0 420 Q260 380 520 430 T1024 410 V490 Q760 470 520 500 T0 480Z" fill="{"#7DB7DD" if r else "#9A8E78"}"/>'
+    s += stonewall(110, 260, 220, 150)
+    if r:
+        s += f'<path d="M214 330 V420" stroke="#8FC7E8" stroke-width="10"/><path d="M560 470 Q660 360 760 470" stroke="url(#stone)" stroke-width="44" fill="none"/>'
+        s += tree(900, 380, .7) + ''.join(f'<rect x="{860 + i * 26}" y="210" width="14" height="60" fill="{c}"/>' for i, c in enumerate((K, "#FFFFFF", Z)))
+    return s
+
+
+def hayat(r):
+    s = room('url(#wall)') + ''.join(column(x, 90, 340, r) for x in (150, 400, 650, 900))
+    if r: s += f'<path d="M520 60 V150" stroke="#3A2A20" stroke-width="3"/><path d="M490 150 h60 v60 h-60z" fill="none" stroke="url(#copper)" stroke-width="5"/><circle cx="520" cy="182" r="12" fill="{S}"/>' + rug(270, 410, 500, 70, 'kilimL')
+    return s
+
+
+def basoda(r):
+    s = room() + f'<ellipse cx="512" cy="56" rx="170" ry="30" fill="{S if r else "#9A8E7A"}"/><rect x="60" y="120" width="300" height="240" rx="10" fill="url(#wood)"/>' + hearth(820, 360, r)
+    if r: s += rug(220, 400, 560, 90) + lamp(450, 200, True)
+    return s
+
+
+def selamlik(r):
+    s = room('url(#wallK)') + sedir(80, 300, 860, r)
+    if r: s += f'<rect x="300" y="60" width="420" height="150" rx="8" fill="url(#kilimL)"/>' + lamp(150, 170, True) + lamp(870, 170, True) + rug(320, 420, 380, 60)
+    return s
+
+
+def kapi(r):
+    s = outdoor('#C9BBA0') + f'<rect x="160" y="110" width="700" height="270" fill="{"#F1E1C4" if r else "#B5A994"}"/>'
+    s += f'<path d="M420 380 V230 Q510 140 600 230 V380Z" fill="{"url(#wood)" if r else "#6B5A4A"}"/><circle cx="560" cy="310" r="10" fill="{S}"/>'
+    if r: s += f'<rect x="380" y="130" width="260" height="56" rx="12" fill="{K}"/><text x="510" y="168" font-size="30" font-family="sans-serif" font-weight="700" fill="{C}" text-anchor="middle">KİLİM EVİ</text>' + lamp(330, 260, True) + lamp(690, 260, True)
+    return s
+
+
+def havuz(r):
+    s = outdoor('#A9C47A') + pool(512, 430, 520, r)
+    if r: s += plant(160, 440, K, .7) + plant(260, 450, '#E27A9A', .6) + plant(860, 440, S, .7) + plant(950, 455, K, .6)
+    return s
+
+
+SCENES.update({'yol': yol, 'bag': bag, 'pekmez': pekmez, 'seki': seki, 'ambar': ambar, 'oba': oba, 'ahir': ahir, 'ocak': ocak,
+               'cayir': cayir, 'kaynak': kaynak, 'hayat': hayat, 'basoda': basoda, 'selamlik': selamlik, 'kapi': kapi, 'havuz': havuz})
+
+
+def intro_pages():
+    """Tanıtım 1 ve 4: yeni sahneler + Nine."""
+    from PIL import Image
+    nine = Image.open(os.path.join(ART, 'nine.png')).convert('RGBA').resize((300, 300))
+    for name, area, pos in (('intro_1', 'area_oda_old', (700, 190)), ('intro_4', 'area_bahce_new', (30, 200))):
+        img = Image.open(os.path.join(ART, area + '.png')).convert('RGBA')
+        img.alpha_composite(nine, pos)
+        img.convert('RGB').save(os.path.join(ART, name + '.png'))
+
+
 if __name__ == '__main__':
     os.makedirs(SVG_DIR, exist_ok=True)
     for key in SCENES:
@@ -269,4 +454,5 @@ if __name__ == '__main__':
             p = os.path.join(SVG_DIR, name + '.svg')
             open(p, 'w').write(svg(key, restored))
             render(p, os.path.join(ART, name + '.png'))
+    intro_pages()
     print('ok', len(SCENES) * 2)

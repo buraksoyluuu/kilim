@@ -24,6 +24,15 @@ namespace Kilim.Game
         private IExtensionProvider _ext;
         private Action<IapStatus, string> _inFlight;
         private Action<string, string> _deferred;
+        private readonly IIapService _fallback;   // mağaza ürünü henüz tanımlı değilse (beta) test mağazası
+
+        public UnityIapService(IIapService fallback = null) { _fallback = fallback; }
+
+        private bool Live(string sku)
+        {
+            var p = _store?.products.WithID(sku);
+            return p != null && p.availableToPurchase;
+        }
 
         public void Initialize(Action<string, string> onDeferredSuccess)
         {
@@ -34,18 +43,19 @@ namespace Kilim.Game
             b.AddProduct(Skus.GoldPass, ProductType.Consumable);   // sezonluk: her sezon yeniden alınır
             b.AddProduct(Skus.NoAds, ProductType.NonConsumable);
             b.AddProduct(Skus.Starter, ProductType.NonConsumable);
+            b.AddProduct(Skus.Lives, ProductType.Consumable);
+            _fallback?.Initialize(onDeferredSuccess);
             UnityPurchasing.Initialize(this, b);
         }
 
         public string LocalizedPrice(string sku)
         {
-            var p = _store?.products.WithID(sku);
-            return p != null && p.availableToPurchase ? p.metadata.localizedPriceString : Skus.UsdPrice(sku);
+            return Live(sku) ? _store.products.WithID(sku).metadata.localizedPriceString : Skus.UsdPrice(sku);
         }
 
         public void Purchase(string sku, Action<IapStatus, string> done)
         {
-            if (_store == null) { done(IapStatus.Failed, null); return; }
+            if (!Live(sku)) { if (_fallback != null) _fallback.Purchase(sku, done); else done(IapStatus.Failed, null); return; }
             _inFlight = done;
             _store.InitiatePurchase(sku);
         }

@@ -546,7 +546,7 @@ namespace Kilim.Game
             {
                 if (timer == null) return;
                 timer.text = l.IsFull ? Loc.T("Canların dolu. Kazandığın bölümde can harcanmaz.")
-                    : Loc.T($"Sonraki can: {Clock(l.NextIn)} · Hepsi: {Clock(l.FullIn)}");
+                    : Loc.T($"Canlar {Clock(l.FullIn)} sonra dolar");
                 if (thenPlay != null && empty && l.CanPlay) { app.Nav.Close(card); thenPlay(); return; }
                 app.Delay(1f, Tick);
             }

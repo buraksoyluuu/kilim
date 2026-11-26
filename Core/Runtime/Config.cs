@@ -40,7 +40,7 @@ namespace Kilim.Core
 
             var lv = Lives;
             lv.Max = Data.Int(d, "lives_max", lv.Max);
-            lv.RegenMinutes = Data.Int(d, "lives_regen_minutes", lv.RegenMinutes);
+            lv.RefillHours = Data.Double(d, "lives_refill_hours", lv.RefillHours);
             lv.RefillCoins = Data.Int(d, "lives_refill_coins", lv.RefillCoins);
 
             var e = Economy;
